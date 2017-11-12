@@ -1,0 +1,1 @@
+export const ATTRIBUTE_MAIN_TYPE = '__main';
