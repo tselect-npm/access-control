@@ -102,8 +102,8 @@ await ac.addPermissionToRole(Role.CUSTOMER, {
   resource: 'posts',
   action: 'create',
   condition: {
-    attributeExists: {
-      '.': ['title', 'content']
+    hashAttributesEqual: {
+      body: ['title', 'content']
     }
   }
 });
@@ -116,7 +116,7 @@ await ac.addPermissionToRole(Role.ADMIN, {
 });
 ```
 
-The `condition` part defines a set of rules used to evaluate whether or not the permission is applicable. Because we have specified `attributeExists`, we are taking a white list approach and the permission will only be applicable if both `title` and `content` - and no other attributes - are provided at the root (`.`) of the `environment`. The `environment` is a hash that contains various values which are being used to evaluate the permission's condition. By saying that we expect the `title` and `content` attributes to exist, we are telling the authorizer to only use this permission if and only if the condition is fully met. That means that, if not both `title` and `content` are provided in the blog post creation payload, then the permission becomes inapplicable and is therefore ignored - in which case the access will be denied. In the same way, if the payload contains any other attribute that `title` and `content`, the permission will also become inapplicable and the access denied.
+The `condition` part defines a set of rules used to evaluate whether or not the permission is applicable. Because we have specified `hashAttributesEqual`, we are taking a white list approach and the permission will only be applicable if both `title` and `content` - and no other attributes - are provided in the `body` hash of the `environment`. The `environment` is a hash that contains various values which are being used to evaluate the permission's condition. By saying that we expect the `title` and `content` attributes to exist, we are telling the authorizer to only use this permission if and only if those attributes are provided in `body`. That means that, if not both `title` and `content` are provided in the blog post creation payload, then the permission becomes inapplicable and is therefore ignored - in which case the access will be denied. In the same way, if the payload contains any other attribute that `title` and `content`, the permission will also become inapplicable and the access, denied.
 
 We'll be building a simple express POST endpoint that allows consumers to create blog posts. We'll assume that the request has been authenticated and the current user stored as `req.user`. We'll also assume that the request's body has already been validated and contains only valid values in regards to the data model.
 
@@ -126,10 +126,10 @@ app.post('/posts', authenticate(), validatePostBody(), async (req: Request, res:
   
   const subject = new UserSubject(req.user);
   
-  // We're passing `body` as a new parameter to can(). This body will act as the `environment`. 
-  const isAllowed = await ac.can(subject, 'posts', 'create', body);
+  // We're passing the body's attributes in the environment in order to let 
+  const isAllowed = await ac.can(subject, 'posts', 'create', { body });
   
-  // For an admin user, since no attributes condition has been defined, any body will be authorized.
+  // For an admin user, since no attributes condition has been defined in the permission, any body will be authorized.
   // For a customer user, the access will only be authorized if both `title` and `content` - and no other attributes - are present. 
   
   if (isAllowed) {
@@ -157,15 +157,16 @@ ac.addPermissionToRole(Role.CUSTOMER, {
   resource: 'posts',
   action: 'read',
   condition: {
-    attributeIfExists: {
+    stringArrayMembersIncludeAtLeastOne: {
       fields: ['id', 'title', 'content', 'created_by']
-    },
-    attributeExists: {
-      '.': ['fields']
     }
   }
 });
+```
 
+`stringArrayMembersIncludeAtLeastOne` tells the authorizer that the `fields` array shall only include the listed members. It also makes the `fields` array a required environment variable and ensures that it contains at least one member. If those conditions are not met, or if the fields contain any unknown attribute, the permission's condition will evaluate to `false` and the access will be denied.  
+
+```typescript
 // We'll assume that the consumers make calls that look like "GET /posts?fields=id,title,content" where the `fields` query parameter defines the fields to be returned as a response.
 
 app.get('/posts', authenticate(), async (req: Request, res: Response) => {
@@ -176,7 +177,7 @@ app.get('/posts', authenticate(), async (req: Request, res: Response) => {
   const access = await ac.determineAccess(subject, 'posts', 'read', { fields });
   
   if (access.isAllowed()) {
-    // The application is responsible for only returning the fields that have been requested. the access control has made sure that only allowed attributes have been requested, so you can safely pass the ist to your service.
+    // The application is responsible for only returning the fields that have been requested. the access control has made sure that only allowed attributes have been requested, so you can safely pass the it to your service.
     const data = await postService.list({ fields });
     res.status(200).json(data);
   } else {
@@ -214,7 +215,26 @@ app.get('/posts', authenticate(), async (req: Request, res: Response) => {
 });
 ```
 
-   
+It is important to note that Bluejay only acts as a store here and never uses `returnedAttributes` to determine access.
+
+Also alternatively, if you are not able to have your services only return a specific set of attributes, you can use Bluejay's `filterAttributes()` utility to filter the payload before responding:
+
+```typescript
+app.get('/posts', authenticate(), async (req: Request, res: Response) => {
+  const subject = new UserSubject(req.user);
+  
+  // We're not passing any environment data here since the request does not contain any attribute information that could be useful to determine access. the `returnedAttributes` are simply ignored by the authorizer.
+  const access = await ac.determineAccess(subject, 'posts', 'read');
+  
+  if (access.isAllowed()) {
+    const data = await postService.list({ fields: access.getReturnedAttributes() });
+    const filteredData = data.map(post => ac.filterAttributes(post, access.getReturnedAttributes()));
+    res.status(200).json(filteredData);
+  } else {
+    res.status(403).end();
+  }
+});
+```
 
 
 ## Inspirations
