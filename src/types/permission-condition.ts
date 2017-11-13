@@ -1,9 +1,6 @@
 import { ComparisonOperator } from '../constants/comparison-operator';
-import { TAttributeName } from './attribute-name';
-import { TComparisonValue } from './comparison-value';
+import { TPermissionOperatorCondition } from './permission-operator-condition';
 
 export type TPermissionCondition = {
-  [operator in Partial<ComparisonOperator>]: {
-    [attribute in TAttributeName]: TComparisonValue | TComparisonValue[];
-  }
+  [operator in Partial<ComparisonOperator>]: TPermissionOperatorCondition;
 }

@@ -5,6 +5,16 @@ export class Access {
     this.allowed = allowed;
   }
 
+  public deny() {
+    this.allowed = false;
+    return this;
+  }
+
+  public allow() {
+    this.allowed = true;
+    return this;
+  }
+
   public isDenied() {
     return !this.allowed;
   }

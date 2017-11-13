@@ -174,7 +174,7 @@ app.get('/posts', authenticate(), async (req: Request, res: Response) => {
   const subject = new UserSubject(req.user);
   
   // We're passing the fields in the environment hash so that they can be evaluated
-  const access = await ac.determineAccess(subject, 'posts', 'read', { fields });
+  const access = await ac.authorize(subject, 'posts', 'read', { fields });
   
   if (access.isAllowed()) {
     // The application is responsible for only returning the fields that have been requested. the access control has made sure that only allowed attributes have been requested, so you can safely pass the it to your service.
@@ -203,7 +203,7 @@ app.get('/posts', authenticate(), async (req: Request, res: Response) => {
   const subject = new UserSubject(req.user);
   
   // We're not passing any environment data here since the request does not contain any attribute information that could be useful to determine access. the `returnedAttributes` are simply ignored by the authorizer.
-  const access = await ac.determineAccess(subject, 'posts', 'read');
+  const access = await ac.authorize(subject, 'posts', 'read');
   
   if (access.isAllowed()) {
     // This time, instead of using the request's `fields`, we're using the fields defined in the permission and accessible through `getReturnedAttributes()` on the access. 
@@ -217,19 +217,18 @@ app.get('/posts', authenticate(), async (req: Request, res: Response) => {
 
 It is important to note that Bluejay only acts as a store here and never uses `returnedAttributes` to determine access.
 
-Also alternatively, if you are not able to have your services only return a specific set of attributes, you can use Bluejay's `filterAttributes()` utility to filter the payload before responding:
+Also alternatively, if you are not able to have your services only return a specific set of attributes, you can use Bluejay's `filterListAttributes()` or `filterAttributes` utility to filter the payload before responding:
 
 ```typescript
 app.get('/posts', authenticate(), async (req: Request, res: Response) => {
   const subject = new UserSubject(req.user);
   
   // We're not passing any environment data here since the request does not contain any attribute information that could be useful to determine access. the `returnedAttributes` are simply ignored by the authorizer.
-  const access = await ac.determineAccess(subject, 'posts', 'read');
+  const access = await ac.authorize(subject, 'posts', 'read');
   
   if (access.isAllowed()) {
     const data = await postService.list({ fields: access.getReturnedAttributes() });
-    const filteredData = data.map(post => ac.filterAttributes(post, access.getReturnedAttributes()));
-    res.status(200).json(filteredData);
+    res.status(200).json(ac.filterListAttributes(data, access.getReturnedAttributes()));
   } else {
     res.status(403).end();
   }

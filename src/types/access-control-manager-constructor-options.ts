@@ -1,9 +1,11 @@
 import { IStore } from '../interfaces/store';
-import { IAuthorizer } from '../interfaces/authorizer';
+import { IAccessAuthorizer } from '../interfaces/access-authorizer';
 import { TAccessFactory } from '../interfaces/access-factory';
+import { IConditionEvaluator } from '../interfaces/condition-evaluator';
+import { TAuthorizerConstructorOptions } from './authorizer-constructor-options';
 
 export type TAccessControlManagerConstructorOptions = {
   store?: IStore;
-  accessBuilder?: IAuthorizer;
-  accessFactory?: TAccessFactory;
+  authorizer?: IAccessAuthorizer;
+  authorizerOptions?: TAuthorizerConstructorOptions;
 };

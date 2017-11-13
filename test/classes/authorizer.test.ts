@@ -1,6 +1,6 @@
-import { Authorizer, PermissionEffect, TPermission, TResource, TAction } from '../../';
+import { AccessAuthorizer, PermissionEffect, TPermission, TResource, TAction } from '../../';
 
-class TestableAuthorizer extends Authorizer {
+class TestableAuthorizer extends AccessAuthorizer {
   public filterRelevantPermissions(resource: TResource, action: TAction, permissions: TPermission[]): TPermission[] {
     return super.filterRelevantPermissions(resource, action, permissions);
   }
