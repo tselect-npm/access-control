@@ -1,13 +1,10 @@
 import { TConditionEvaluationJSON } from '../types/condition-evaluation-json';
-import { ComparisonOperator } from '../constants/comparison-operator';
-import { TAttributeName } from '../types/attribute-name';
+import { IAttributeConditionEvaluation } from './attribute-condition-evaluation';
 
 export interface IConditionEvaluation {
   getResult(): boolean;
   succeeded(): boolean;
   failed(): boolean;
-  getOperator(): ComparisonOperator | null;
-  getAttributeName(): TAttributeName | null;
-  getEnvironmentValue(): any;
+  getFailedAttributeConditionEvaluation(): IAttributeConditionEvaluation | null;
   toJSON(): TConditionEvaluationJSON;
 }

@@ -31,7 +31,6 @@ export class NumberConditionOperationMatcher implements IConditionOperationMatch
     }
   }
 
-
   protected equals(comparisonValues: TComparisonValue[], envValue: any, operator: ComparisonOperator): boolean {
     const envNumber = parseFloat(envValue);
 

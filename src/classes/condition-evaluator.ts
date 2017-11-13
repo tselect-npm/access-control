@@ -21,8 +21,13 @@ import { HashAttributesConditionOperationMatcher } from './condition-operation-m
 import { BoolConditionOperationMatcher } from './condition-operation-matchers/bool';
 import { UnmappedConditionOperatorError } from './errors/unmapped-condition-operator';
 import { TConditionEvaluationConstructorOptions } from '../types/condition-evaluation-constructor-options';
+import { IAttributeConditionEvaluation } from '../interfaces/attribute-condition-evaluation';
+import { TAttributeConditionEvaluationConstructorOptions } from '../types/attribute-condition-evaluation-constructor-options';
+import { AttributeConditionEvaluation } from './attribute-condition-evaluation';
+import { TAttributeConditionEvaluationFactory } from '../types/attribute-condition-evaluation-factory';
 
 const defaultConditionEvaluationFactory = (options: TConditionEvaluationConstructorOptions) => new ConditionEvaluation(options);
+const defaultAttributeConditionEvaluationFactory = (options: TAttributeConditionEvaluationConstructorOptions) => new AttributeConditionEvaluation(options);
 
 const stringConditionOperationMatcher = new StringConditionOperationMatcher();
 const dateConditionOperationMatcher = new DateConditionOperationMatcher();
@@ -95,9 +100,11 @@ const defaultConditionOperationMatchersMap: TConditionOperationMatcherMap = new 
 export class ConditionEvaluator implements IConditionEvaluator {
   private conditionEvaluationFactory: TConditionEvaluationFactory;
   private conditionOperationMatchersMap: TConditionOperationMatcherMap;
+  private attributeConditionEvaluationFactory: TAttributeConditionEvaluationFactory;
 
   public constructor(options: TConditionEvaluatorConstructorOptions = {}) {
     this.conditionEvaluationFactory = options.conditionEvaluationFactory || defaultConditionEvaluationFactory;
+    this.attributeConditionEvaluationFactory = options.attributeConditionEvaluationFactory || defaultAttributeConditionEvaluationFactory;
     this.conditionOperationMatchersMap = options.conditionOperationMatchersMap || defaultConditionOperationMatchersMap;
   }
 
@@ -117,37 +124,41 @@ export class ConditionEvaluator implements IConditionEvaluator {
     for (const operator of operators) {
       const evaluation = this.evaluateForOperator(operator as ComparisonOperator, condition[operator], environment);
       if (evaluation.failed()) {
-        return evaluation;
+        return this.conditionEvaluationFactory({ result: false, failedAttributeConditionEvaluation: evaluation });
       }
     }
 
     return this.conditionEvaluationFactory({ result: true });
   }
 
-  protected evaluateForOperator(operator: ComparisonOperator, operatorCondition: TPermissionOperatorCondition, environment: TEnvironment): IConditionEvaluation {
+  protected evaluateForOperator(operator: ComparisonOperator, operatorCondition: TPermissionOperatorCondition, environment: TEnvironment): IAttributeConditionEvaluation {
     const canSkip = isIfExistsOperator(operator as any);
     const attributeNames = Object.keys(operatorCondition);
+    let currentEvaluation: IAttributeConditionEvaluation | null = null;
 
     for (const attributeName of attributeNames) {
       const environmentValue = Lodash.get(environment, attributeName);
 
       if (Lodash.isUndefined(environmentValue)) {
         if (canSkip) {
-          break;
+          currentEvaluation = this.attributeConditionEvaluationFactory({ result: true, operator, attributeName, environmentValue });
         } else {
-          return this.conditionEvaluationFactory({ result: false, operator, attributeName, environmentValue });
+          currentEvaluation = this.attributeConditionEvaluationFactory({ result: false, operator, attributeName, environmentValue });
+          break;
         }
       } else {
         const matcher = this.getConditionOperationMatcherForOperator(operator);
         const matches = matcher.matches(operator, makeArray(operatorCondition[attributeName]), environmentValue);
         if (!matches) {
-          return this.conditionEvaluationFactory({ result: false, operator, attributeName, environmentValue });
+          currentEvaluation = this.attributeConditionEvaluationFactory({ result: false, operator, attributeName, environmentValue });
+          break;
+        } else {
+          currentEvaluation = this.attributeConditionEvaluationFactory({ result: true, operator, attributeName, environmentValue });
         }
       }
     }
 
-    // If not match failed, then the evaluation succeeded
-    return this.conditionEvaluationFactory({ result: true });
+    return currentEvaluation as IAttributeConditionEvaluation;
   }
 
   protected getConditionOperationMatcherForOperator(operator: ComparisonOperator): IConditionOperationMatcher {

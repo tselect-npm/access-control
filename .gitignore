@@ -5,3 +5,5 @@ lib/
 node_modules/
 npm-debug.log
 dts/
+.nyc_output/
+coverage/

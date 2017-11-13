@@ -1,9 +1,6 @@
-import { ComparisonOperator } from '../constants/comparison-operator';
-import { TAttributeName } from './attribute-name';
+import { IAttributeConditionEvaluation } from '../interfaces/attribute-condition-evaluation';
 
 export type TConditionEvaluationConstructorOptions = {
   result: boolean;
-  operator?: ComparisonOperator;
-  attributeName?: TAttributeName;
-  environmentValue?: any;
+  failedAttributeConditionEvaluation?: IAttributeConditionEvaluation | null;
 };

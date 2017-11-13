@@ -1,9 +1,6 @@
-import { ComparisonOperator } from '../constants/comparison-operator';
-import { TAttributeName } from './attribute-name';
+import { TAttributeConditionEvaluationJSON } from './attribute-condition-evaluation-json';
 
 export type TConditionEvaluationJSON = {
   result: boolean;
-  operator: ComparisonOperator | null;
-  attributeName: TAttributeName | null;
-  environmentValue: any;
+  failedAttributeConditionEvaluation: TAttributeConditionEvaluationJSON | null
 };

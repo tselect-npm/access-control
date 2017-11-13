@@ -6,3 +6,5 @@ node_modules/
 dts/
 !dts/**/*.d.ts
 tsconfig.json
+.nyc_output/
+coverage/

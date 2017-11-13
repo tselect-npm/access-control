@@ -68,7 +68,7 @@ export class AccessAuthorizer implements IAccessAuthorizer {
     const access = this.accessFactory({ consideredPermissions: relevantPermissions });
 
     if (!relevantPermissions.length) {
-      return access.deny().setDecisionCode(DecisionCode.NO_SUCH_PERMISSION);
+      return access.deny().setDecisionCode(DecisionCode.NO_RELEVANT_PERMISSIONS);
     }
 
     // We evaluate deny permissions first as an explicit deny permission takes precedence over any allow permission.
