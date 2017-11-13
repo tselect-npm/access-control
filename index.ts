@@ -22,3 +22,6 @@ export { WILD_CARD } from './src/constants/wild-card';
 export { anyImplies } from './src/utils/any-implies';
 export { implies } from './src/utils/implies';
 export { isWildCard } from './src/utils/is-wild-card';
+export { blanksToWildCards } from './src/utils/blanks-to-wild-cards';
+export { isIfExistsOperator } from './src/utils/is-if-exists-operator';
+export { toSubjectPrincipal } from './src/utils/to-subject-principal';

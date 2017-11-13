@@ -17,7 +17,6 @@ import { TAuthorizerConstructorOptions } from '../types/authorizer-constructor-o
 import { TAccessConstructorOptions } from '../types/access-constructor-options';
 import { TAccessFactory } from '../types/access-factory';
 import { DecisionCode } from '../constants/decision-code';
-import { IConditionEvaluation } from '../interfaces/condition-evaluation';
 
 const defaultAccessFactory = (options?: TAccessConstructorOptions) => new Access(options);
 const defaultConditionEvaluator = new ConditionEvaluator();
