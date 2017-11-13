@@ -6,7 +6,7 @@ class TestableAuthorizer extends AccessAuthorizer {
   }
 }
 
-describe('Authorizer', () => {
+describe('AccessAuthorizer', () => {
   describe('#filterRelevantPermissions()', () => {
     const permissions: TPermission[] = [
       { id: '1', effect: PermissionEffect.DENY, resource: 'tables:post', action: 'create' },

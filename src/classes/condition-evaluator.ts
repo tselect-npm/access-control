@@ -12,7 +12,7 @@ import { IConditionOperationMatcher } from '../interfaces/condition-operation-ma
 import { makeArray } from '@bluejay/utils';
 import { TConditionOperationMatcherMap } from '../types/condition-operation-matcher-map';
 import { TConditionEvaluatorConstructorOptions } from '../types/condition-evaluator-constructor-options';
-import { ConditionEvaluation, TConditionEvaluationConstructorOptions } from './condition-evaluation';
+import { ConditionEvaluation} from './condition-evaluation';
 import { StringConditionOperationMatcher } from './condition-operation-matchers/string';
 import { DateConditionOperationMatcher } from './condition-operation-matchers/date';
 import { NumberConditionOperationMatcher } from './condition-operation-matchers/number';
@@ -20,6 +20,7 @@ import { StringArrayConditionOperationMatcher } from './condition-operation-matc
 import { HashAttributesConditionOperationMatcher } from './condition-operation-matchers/hash-attributes';
 import { BoolConditionOperationMatcher } from './condition-operation-matchers/bool';
 import { UnmappedConditionOperatorError } from './errors/unmapped-condition-operator';
+import { TConditionEvaluationConstructorOptions } from '../types/condition-evaluation-constructor-options';
 
 const defaultConditionEvaluationFactory = (options: TConditionEvaluationConstructorOptions) => new ConditionEvaluation(options);
 
@@ -120,7 +121,7 @@ export class ConditionEvaluator implements IConditionEvaluator {
       }
     }
 
-    return this.conditionEvaluationFactory({ result: true });;
+    return this.conditionEvaluationFactory({ result: true });
   }
 
   protected evaluateForOperator(operator: ComparisonOperator, operatorCondition: TPermissionOperatorCondition, environment: TEnvironment): IConditionEvaluation {
@@ -128,18 +129,19 @@ export class ConditionEvaluator implements IConditionEvaluator {
     const attributeNames = Object.keys(operatorCondition);
 
     for (const attributeName of attributeNames) {
-      const envValue = Lodash.get(environment, attributeName);
-      if (Lodash.isUndefined(envValue)) {
+      const environmentValue = Lodash.get(environment, attributeName);
+
+      if (Lodash.isUndefined(environmentValue)) {
         if (canSkip) {
           break;
         } else {
-          return this.conditionEvaluationFactory({ result: false });
+          return this.conditionEvaluationFactory({ result: false, operator, attributeName, environmentValue });
         }
       } else {
         const matcher = this.getConditionOperationMatcherForOperator(operator);
-        const matches = matcher.matches(operator, makeArray(operatorCondition[attributeName]), Lodash.get(environment, attributeName));
+        const matches = matcher.matches(operator, makeArray(operatorCondition[attributeName]), environmentValue);
         if (!matches) {
-          return this.conditionEvaluationFactory({ result: false });
+          return this.conditionEvaluationFactory({ result: false, operator, attributeName, environmentValue });
         }
       }
     }

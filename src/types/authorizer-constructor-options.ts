@@ -1,9 +1,9 @@
-import { IAccess } from '../interfaces/access';
 import { IConditionEvaluator } from '../interfaces/condition-evaluator';
 import { TConditionEvaluatorConstructorOptions } from './condition-evaluator-constructor-options';
+import { TAccessFactory } from './access-factory';
 
 export type TAuthorizerConstructorOptions = {
-  accessFactory?: (allowed: boolean) => IAccess;
+  accessFactory?: TAccessFactory;
   conditionEvaluator?: IConditionEvaluator;
   conditionEvaluatorOptions?: TConditionEvaluatorConstructorOptions;
 }

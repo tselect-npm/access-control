@@ -5,7 +5,6 @@ import { implies } from '../utils/implies';
 import { TResource } from '../types/resource';
 import { TAction } from '../types/action';
 import { IAccess } from '../interfaces/access';
-import { TAccessFactory } from '../interfaces/access-factory';
 import { IAccessAuthorizer } from '../interfaces/access-authorizer';
 import { Access } from './access';
 import { TEnvironment } from '../types/environment';
@@ -15,9 +14,13 @@ import { makeArray } from '@bluejay/utils';
 import { IConditionEvaluator } from '../interfaces/condition-evaluator';
 import { ConditionEvaluator } from './condition-evaluator';
 import { TAuthorizerConstructorOptions } from '../types/authorizer-constructor-options';
+import { TAccessConstructorOptions } from '../types/access-constructor-options';
+import { TAccessFactory } from '../types/access-factory';
+import { DecisionCode } from '../constants/decision-code';
+import { IConditionEvaluation } from '../interfaces/condition-evaluation';
 
-const defaultAccessFactory = (allowed: boolean) => new Access(allowed);
-const defaultConditionEvaluation = new ConditionEvaluator();
+const defaultAccessFactory = (options?: TAccessConstructorOptions) => new Access(options);
+const defaultConditionEvaluator = new ConditionEvaluator();
 
 export class AccessAuthorizer implements IAccessAuthorizer {
   private accessFactory: TAccessFactory;
@@ -25,7 +28,7 @@ export class AccessAuthorizer implements IAccessAuthorizer {
 
   public constructor(options: TAuthorizerConstructorOptions = {}) {
     this.accessFactory = options.accessFactory || defaultAccessFactory;
-    this.conditionEvaluator = options.conditionEvaluator || defaultConditionEvaluation;
+    this.conditionEvaluator = options.conditionEvaluator || defaultConditionEvaluator;
   }
 
   protected filterRelevantPermissions(resource: TResource, action: TAction, permissions: TPermission[]): TPermission[] {
@@ -59,31 +62,53 @@ export class AccessAuthorizer implements IAccessAuthorizer {
   }
 
   public authorize(resource: TResource, action: TAction, permissions: TPermission[], environment: TEnvironment = {}): IAccess {
-    // The access is reputed denied until proven otherwise
-    const access = this.accessFactory(false);
-
     // Only evaluate relevant permissions if those haven't yet been filtered by the store.
     const relevantPermissions = this.filterRelevantPermissions(resource, action, permissions);
+
+    const access = this.accessFactory({ consideredPermissions: relevantPermissions });
+
+    if (!relevantPermissions.length) {
+      return access.deny().setDecisionCode(DecisionCode.NO_SUCH_PERMISSION);
+    }
 
     // We evaluate deny permissions first as an explicit deny permission takes precedence over any allow permission.
     const denyPermissions = relevantPermissions.filter(permission => permission.effect === PermissionEffect.DENY);
 
     for (const permission of denyPermissions) {
-      const meetsCondition = this.conditionEvaluator.evaluate(permission.condition, environment);
+      const evaluation = this.conditionEvaluator.evaluate(permission.condition, environment);
       // Meeting a deny permission's condition means that the permission is applicable and therefore that the access
       // is denied.
-      if (meetsCondition) {
-        return access;
+      if (evaluation.succeeded()) {
+        return access
+          .deny()
+          .setDecisionCode(DecisionCode.EXPLICIT_DENY)
+          .setDecisivePermission(permission);
       }
     }
 
     // We then evaluate allow permissions, and allow access if any is fulfilled.
     const allowPermissions = relevantPermissions.filter(permission => permission.effect === PermissionEffect.ALLOW);
 
+    if (!allowPermissions.length) {
+      return access
+        .deny()
+        .setDecisionCode(DecisionCode.NO_ALLOW_PERMISSIONS);
+    }
+
     for (const permission of allowPermissions) {
-      const meetsCondition = this.conditionEvaluator.evaluate(permission.condition, environment);
-      if (meetsCondition) {
-        return access.allow();
+      const evaluation = this.conditionEvaluator.evaluate(permission.condition, environment);
+      if (evaluation.succeeded()) {
+        return access
+          .allow()
+          .setDecisionCode(DecisionCode.EXPLICIT_ALLOW)
+          .setDecisiveConditionEvaluation(evaluation)
+          .setDecisivePermission(permission);
+      } else {
+        access
+          .deny()
+          .setDecisivePermission(permission)
+          .setDecisiveConditionEvaluation(evaluation)
+          .setDecisionCode(DecisionCode.EXPLICIT_ALLOW_FAILED_CONDITION);
       }
     }
 
