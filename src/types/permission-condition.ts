@@ -1,6 +1,6 @@
-import { ComparisonOperator } from '../constants/comparison-operator';
-import { TPermissionOperatorCondition } from './permission-operator-condition';
+import { ConditionOperator } from '../constants/condition-operator';
+import { TPermissionConditionOperatorDescription } from './permission-condition-operator-description';
 
 export type TPermissionCondition = {
-  [operator in ComparisonOperator]?: TPermissionOperatorCondition;
+  [operator in ConditionOperator]?: TPermissionConditionOperatorDescription;
 }

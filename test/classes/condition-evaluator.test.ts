@@ -1,12 +1,13 @@
 import { ConditionEvaluator } from '../../';
 import { MalformedConditionError } from '../../src/classes/errors/malformed-condition';
 import { UnmappedConditionOperatorError } from '../../src/classes/errors/unmapped-condition-operator';
+import { UnmappedConditionModifierError } from '../../src/classes/errors/unmapped-condition-modifier';
 
 class TestableConditionEvaluator extends ConditionEvaluator {
 
 }
 
-describe('ConditionEvaluator', () => {
+describe.only('ConditionEvaluator', () => {
   const conditionEvaluator = new TestableConditionEvaluator();
 
   describe('#evaluate()', () => {
@@ -26,34 +27,47 @@ describe('ConditionEvaluator', () => {
         wrong: { foo: 'blah' }
       } as any, { foo: '' })).to.throw(UnmappedConditionOperatorError);
     });
+    it('should throw if condition contains an unknown modifier', () => {
+      expect(() => conditionEvaluator.evaluate({
+        numberGreaterThan: { foo: 'blah' }
+      } as any, { foo: '' })).to.throw(UnmappedConditionModifierError);
+    });
     it('should return a positive evaluation if condition is met', () => {
       const evaluation = conditionEvaluator.evaluate({
         numberGreaterThan: {
-          foo: '13'
+          exactValue: {
+            foo: '13'
+          }
         }
       }, { foo: 15 });
       expect(evaluation.succeeded()).to.equal(true);
     });
-    it('should return a positive evaluation if env is undefined but operator if optional', () => {
+    it('should return a positive evaluation if env is undefined but operator is optional', () => {
       const evaluation = conditionEvaluator.evaluate({
-        numberGreaterThanIfExists: {
-          foo: '13'
+        numberGreaterThan: {
+          exactValueIfExists: {
+            foo: '13'
+          }
         }
       }, {});
       expect(evaluation.succeeded()).to.equal(true);
     });
     it('should return a negative evaluation if condition is NOT met', () => {
       const evaluation = conditionEvaluator.evaluate({
-        numberGreaterThanIfExists: {
-          foo: '13'
+        numberGreaterThan: {
+          exactValueIfExists: {
+            foo: '13'
+          }
         }
       }, { foo: 11 });
       expect(evaluation.succeeded()).to.equal(false);
     });
     it('should return a negative evaluation if condition is NOT met', () => {
       const evaluation = conditionEvaluator.evaluate({
-        numberGreaterThanIfExists: {
-          foo: '13'
+        numberGreaterThan: {
+          exactValueIfExists: {
+            foo: '13'
+          }
         }
       }, { foo: 11 });
       expect(evaluation.succeeded()).to.equal(false);
@@ -61,7 +75,9 @@ describe('ConditionEvaluator', () => {
     it('should return a negative evaluation if env is undefined and operator not optional', () => {
       const evaluation = conditionEvaluator.evaluate({
         numberGreaterThan: {
-          foo: '13'
+          exactValue: {
+            foo: '13'
+          }
         }
       }, {});
       expect(evaluation.succeeded()).to.equal(false);

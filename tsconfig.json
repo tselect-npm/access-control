@@ -9,6 +9,7 @@
     "noImplicitReturns": true,
     "suppressImplicitAnyIndexErrors": true,
     "inlineSourceMap": true,
+    "lib": ["es2017"],
     "types": ["node", "mocha", "chai", "chai-subset"]
   },
   "exclude": [

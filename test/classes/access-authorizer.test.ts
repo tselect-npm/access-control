@@ -149,14 +149,16 @@ describe('AccessAuthorizer', () => {
     });
 
     it('should explicitly deny because no deny condition matched', () => {
-      const permissions = [{
+      const permissions: TPermission[] = [{
         id: '1',
         effect: PermissionEffect.DENY,
         resource: 'tables:post',
         action: 'create',
         condition: {
           numberGreaterThan: {
-            foo: '15'
+            exactValue: {
+              foo: '15'
+            }
           }
         }
       }];
@@ -169,14 +171,16 @@ describe('AccessAuthorizer', () => {
     });
 
     it('should deny because no allow permission', () => {
-      const permissions = [{
+      const permissions: TPermission[] = [{
         id: '1',
         effect: PermissionEffect.DENY,
         resource: 'tables:post',
         action: 'create',
         condition: {
           numberGreaterThan: {
-            foo: '15'
+            exactValue: {
+              foo: '15'
+            }
           }
         }
       }];
@@ -189,14 +193,16 @@ describe('AccessAuthorizer', () => {
     });
 
     it('should deny because allow condition failed', () => {
-      const permissions = [{
+      const permissions: TPermission[] = [{
         id: '1',
         effect: PermissionEffect.ALLOW,
         resource: 'tables:post',
         action: 'create',
         condition: {
           numberGreaterThan: {
-            foo: '15'
+            exactValue: {
+              foo: '15'
+            }
           }
         }
       }];

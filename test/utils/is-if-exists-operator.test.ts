@@ -1,13 +1,13 @@
-import { isIfExistsOperator } from '../../src/utils/is-if-exists-operator';
-import { ComparisonOperator } from '../../src/constants/comparison-operator';
+import { isIfExistsModifier } from '../../src/utils/is-if-exists-modifier';
+import { ConditionOperator } from '../../src/constants/condition-operator';
 
-export { isIfExistsOperator } from '../../';
+export { isIfExistsModifier } from '../../';
 
 describe('isIfExistsOperator()', () => {
   it('should return true', () => {
-    expect(isIfExistsOperator('abcIfExists' as ComparisonOperator)).to.equal(true);
+    expect(isIfExistsModifier('abcIfExists' as ConditionOperator)).to.equal(true);
   });
   it('should return false', () => {
-    expect(isIfExistsOperator('abc' as ComparisonOperator)).to.equal(false);
+    expect(isIfExistsModifier('abc' as ConditionOperator)).to.equal(false);
   });
 });

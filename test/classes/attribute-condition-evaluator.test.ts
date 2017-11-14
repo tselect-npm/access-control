@@ -1,4 +1,4 @@
-import { AttributeConditionEvaluation, ComparisonOperator } from '../../';
+import { AttributeConditionEvaluation, ConditionOperator } from '../../';
 
 describe('AttributeConditionEvaluator', () => {
   describe('getters', () => {
@@ -6,7 +6,7 @@ describe('AttributeConditionEvaluator', () => {
       result: true,
       attributeName: 'foo',
       environmentValue: null,
-      operator: 'foo' as ComparisonOperator
+      operator: 'foo' as ConditionOperator
     });
 
     const tests = [
@@ -29,7 +29,7 @@ describe('AttributeConditionEvaluator', () => {
         result: true,
         attributeName: 'foo',
         environmentValue: null,
-        operator: 'foo' as ComparisonOperator
+        operator: 'foo' as ConditionOperator
       });
       expect(evaluation.succeeded()).to.equal(true);
     });
@@ -38,7 +38,7 @@ describe('AttributeConditionEvaluator', () => {
         result: false,
         attributeName: 'foo',
         environmentValue: null,
-        operator: 'foo' as ComparisonOperator
+        operator: 'foo' as ConditionOperator
       });
       expect(evaluation.succeeded()).to.equal(false);
     });
@@ -50,7 +50,7 @@ describe('AttributeConditionEvaluator', () => {
         result: false,
         attributeName: 'foo',
         environmentValue: null,
-        operator: 'foo' as ComparisonOperator
+        operator: 'foo' as ConditionOperator
       });
       expect(evaluation.failed()).to.equal(true);
     });
@@ -59,7 +59,7 @@ describe('AttributeConditionEvaluator', () => {
         result: true,
         attributeName: 'foo',
         environmentValue: null,
-        operator: 'foo' as ComparisonOperator
+        operator: 'foo' as ConditionOperator
       });
       expect(evaluation.failed()).to.equal(false);
     });
@@ -71,7 +71,7 @@ describe('AttributeConditionEvaluator', () => {
         result: true,
         attributeName: 'foo',
         environmentValue: null,
-        operator: 'foo' as ComparisonOperator
+        operator: 'foo' as ConditionOperator
       };
 
       const evaluation = new AttributeConditionEvaluation(options);

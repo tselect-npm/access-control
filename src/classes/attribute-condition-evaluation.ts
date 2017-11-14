@@ -1,5 +1,5 @@
 import { TAttributeName } from '../types/attribute-name';
-import { ComparisonOperator } from '../constants/comparison-operator';
+import { ConditionOperator } from '../constants/condition-operator';
 import { IAttributeConditionEvaluation } from '../interfaces/attribute-condition-evaluation';
 import { TAttributeConditionEvaluationConstructorOptions } from '../types/attribute-condition-evaluation-constructor-options';
 import { TAttributeConditionEvaluationJSON } from '../types/attribute-condition-evaluation-json';
@@ -7,7 +7,7 @@ import { TAttributeConditionEvaluationJSON } from '../types/attribute-condition-
 export class AttributeConditionEvaluation implements IAttributeConditionEvaluation {
   private result: boolean;
   private attributeName: TAttributeName;
-  private operator: ComparisonOperator;
+  private operator: ConditionOperator;
   private environmentValue: any;
 
   public constructor(options: TAttributeConditionEvaluationConstructorOptions) {
@@ -29,7 +29,7 @@ export class AttributeConditionEvaluation implements IAttributeConditionEvaluati
     return this.result === false;
   }
 
-  public getOperator(): ComparisonOperator | null {
+  public getOperator(): ConditionOperator | null {
     return this.operator;
   }
 

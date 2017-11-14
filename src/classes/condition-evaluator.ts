@@ -1,111 +1,45 @@
-import { ComparisonOperator } from '../constants/comparison-operator';
-import { isIfExistsOperator } from '../utils/is-if-exists-operator';
-import * as Lodash from 'lodash';
-import { TPermissionOperatorCondition } from '../types/permission-operator-condition';
-import { TEnvironment } from '../types/environment';
-import { IConditionEvaluator } from '../interfaces/condition-evaluator';
-import { TPermissionCondition } from '../types/permission-condition';
-import { IConditionEvaluation } from '../interfaces/condition-evaluation';
-import { TConditionEvaluationFactory } from '../types/condition-evaluation-factory';
-import { MalformedConditionError } from './errors/malformed-condition';
-import { IConditionOperationMatcher } from '../interfaces/condition-operation-matcher';
 import { makeArray } from '@bluejay/utils';
-import { TConditionOperationMatcherMap } from '../types/condition-operation-matcher-map';
-import { TConditionEvaluatorConstructorOptions } from '../types/condition-evaluator-constructor-options';
-import { ConditionEvaluation} from './condition-evaluation';
-import { StringConditionOperationMatcher } from './condition-operation-matchers/string';
-import { DateConditionOperationMatcher } from './condition-operation-matchers/date';
-import { NumberConditionOperationMatcher } from './condition-operation-matchers/number';
-import { StringArrayConditionOperationMatcher } from './condition-operation-matchers/string-array';
-import { HashAttributesConditionOperationMatcher } from './condition-operation-matchers/hash-attributes';
-import { BoolConditionOperationMatcher } from './condition-operation-matchers/bool';
-import { UnmappedConditionOperatorError } from './errors/unmapped-condition-operator';
-import { TConditionEvaluationConstructorOptions } from '../types/condition-evaluation-constructor-options';
+import * as Lodash from 'lodash';
+import { ConditionOperator } from '../constants/condition-operator';
 import { IAttributeConditionEvaluation } from '../interfaces/attribute-condition-evaluation';
+import { IConditionEvaluation } from '../interfaces/condition-evaluation';
+import { IConditionEvaluator } from '../interfaces/condition-evaluator';
 import { TAttributeConditionEvaluationConstructorOptions } from '../types/attribute-condition-evaluation-constructor-options';
-import { AttributeConditionEvaluation } from './attribute-condition-evaluation';
 import { TAttributeConditionEvaluationFactory } from '../types/attribute-condition-evaluation-factory';
+import { TConditionEvaluationConstructorOptions } from '../types/condition-evaluation-constructor-options';
+import { TConditionEvaluationFactory } from '../types/condition-evaluation-factory';
+import { TConditionEvaluatorConstructorOptions } from '../types/condition-evaluator-constructor-options';
+import { TConditionOperatorHandler } from '../types/condition-operator-handler';
+import { TEnvironment } from '../types/environment';
+import { TPermissionCondition } from '../types/permission-condition';
+import { isIfExistsModifier } from '../utils/is-if-exists-modifier';
+import { AttributeConditionEvaluation } from './attribute-condition-evaluation';
+import { ConditionEvaluation } from './condition-evaluation';
+import { MalformedConditionError } from './errors/malformed-condition';
+import { ConditionOperatorsHandlerManager } from './condition-operators-handler-manager';
+import { IConditionOperatorsHandlerManager } from '../interfaces/condition-operators-handler-manager';
+import { ConditionModifierHandlerManager } from './condition-modifier-handler-manager';
+import { IConditionModifierHandlerManager } from '../interfaces/condition-modifier-handler-manager';
+import { TConditionModifierHandler } from '../types/condition-modifier-handler';
+import { UnmappedConditionOperatorError } from './errors/unmapped-condition-operator';
+import { UnmappedConditionModifierError } from './errors/unmapped-condition-modifier';
 
 const defaultConditionEvaluationFactory = (options: TConditionEvaluationConstructorOptions) => new ConditionEvaluation(options);
 const defaultAttributeConditionEvaluationFactory = (options: TAttributeConditionEvaluationConstructorOptions) => new AttributeConditionEvaluation(options);
-
-const stringConditionOperationMatcher = new StringConditionOperationMatcher();
-const dateConditionOperationMatcher = new DateConditionOperationMatcher();
-const numberConditionOperationMatcher = new NumberConditionOperationMatcher();
-const stringArrayConditionOperationMatcher = new StringArrayConditionOperationMatcher();
-const hashAttributesConditionOperationMatcher = new HashAttributesConditionOperationMatcher();
-const boolConditionOperationMatcher = new BoolConditionOperationMatcher();
-
-const defaultConditionOperationMatchersMap: TConditionOperationMatcherMap = new Map([
-  // Strings
-  [ComparisonOperator.STRING_EQUALS, stringConditionOperationMatcher as IConditionOperationMatcher],
-  [ComparisonOperator.STRING_NOT_EQUALS, stringConditionOperationMatcher],
-  [ComparisonOperator.STRING_EQUALS_IF_EXISTS, stringConditionOperationMatcher],
-  [ComparisonOperator.STRING_NOT_EQUALS_IF_EXISTS, stringConditionOperationMatcher],
-
-  // Numbers
-  [ComparisonOperator.NUMBER_EQUALS, numberConditionOperationMatcher],
-  [ComparisonOperator.NUMBER_NOT_EQUALS, numberConditionOperationMatcher],
-  [ComparisonOperator.NUMBER_LOWER_THAN, numberConditionOperationMatcher],
-  [ComparisonOperator.NUMBER_LOWER_THAN_EQUALS, numberConditionOperationMatcher],
-  [ComparisonOperator.NUMBER_GREATER_THAN, numberConditionOperationMatcher],
-  [ComparisonOperator.NUMBER_GREATER_THAN_EQUALS, numberConditionOperationMatcher],
-
-  [ComparisonOperator.NUMBER_EQUALS_IF_EXISTS, numberConditionOperationMatcher],
-  [ComparisonOperator.NUMBER_NOT_EQUALS_IF_EXISTS, numberConditionOperationMatcher],
-  [ComparisonOperator.NUMBER_LOWER_THAN_IF_EXISTS, numberConditionOperationMatcher],
-  [ComparisonOperator.NUMBER_LOWER_THAN_EQUALS_IF_EXISTS, numberConditionOperationMatcher],
-  [ComparisonOperator.NUMBER_GREATER_THAN_IF_EXISTS, numberConditionOperationMatcher],
-  [ComparisonOperator.NUMBER_GREATER_THAN_EQUALS_IF_EXISTS, numberConditionOperationMatcher],
-
-  // Booleans
-  [ComparisonOperator.BOOL, boolConditionOperationMatcher],
-
-  [ComparisonOperator.BOOL_IF_EXISTS, boolConditionOperationMatcher],
-
-  // Dates
-  [ComparisonOperator.DATE_EQUALS, dateConditionOperationMatcher],
-  [ComparisonOperator.DATE_NOT_EQUALS, dateConditionOperationMatcher],
-  [ComparisonOperator.DATE_LOWER_THAN, dateConditionOperationMatcher],
-  [ComparisonOperator.DATE_LOWER_THAN_EQUALS, dateConditionOperationMatcher],
-  [ComparisonOperator.DATE_GREATER_THAN, dateConditionOperationMatcher],
-  [ComparisonOperator.DATE_GREATER_THAN_EQUALS, dateConditionOperationMatcher],
-
-  [ComparisonOperator.DATE_EQUALS_IF_EXISTS, dateConditionOperationMatcher],
-  [ComparisonOperator.DATE_NOT_EQUALS_IF_EXISTS, dateConditionOperationMatcher],
-  [ComparisonOperator.DATE_LOWER_THAN_IF_EXISTS, dateConditionOperationMatcher],
-  [ComparisonOperator.DATE_LOWER_THAN_EQUALS_IF_EXISTS, dateConditionOperationMatcher],
-  [ComparisonOperator.DATE_GREATER_THAN_IF_EXISTS, dateConditionOperationMatcher],
-  [ComparisonOperator.DATE_GREATER_THAN_EQUALS_IF_EXISTS, dateConditionOperationMatcher],
-
-  // Hash attributes
-  [ComparisonOperator.HASH_ATTRIBUTES_EQUAL, hashAttributesConditionOperationMatcher],
-  [ComparisonOperator.HASH_ATTRIBUTES_INCLUDE, hashAttributesConditionOperationMatcher],
-  [ComparisonOperator.HASH_ATTRIBUTES_INCLUDE_AT_LEAST_ONE, hashAttributesConditionOperationMatcher],
-
-  [ComparisonOperator.HASH_ATTRIBUTES_EQUAL_IF_EXISTS, hashAttributesConditionOperationMatcher],
-  [ComparisonOperator.HASH_ATTRIBUTES_INCLUDE_IF_EXISTS, hashAttributesConditionOperationMatcher],
-  [ComparisonOperator.HASH_ATTRIBUTES_INCLUDE_AT_LEAST_ONE_IF_EXISTS, hashAttributesConditionOperationMatcher],
-
-  // String arrays
-  [ComparisonOperator.STRING_ARRAY_MEMBERS_EQUAL, stringArrayConditionOperationMatcher],
-  [ComparisonOperator.STRING_ARRAY_MEMBERS_INCLUDE, stringArrayConditionOperationMatcher],
-  [ComparisonOperator.STRING_ARRAY_MEMBERS_INCLUDE_AT_LEAST_ONE, stringArrayConditionOperationMatcher],
-
-  [ComparisonOperator.STRING_ARRAY_MEMBERS_EQUAL_IF_EXISTS, stringArrayConditionOperationMatcher],
-  [ComparisonOperator.STRING_ARRAY_MEMBERS_INCLUDE_IF_EXISTS, stringArrayConditionOperationMatcher],
-  [ComparisonOperator.STRING_ARRAY_MEMBERS_INCLUDE_AT_LEAST_ONE_IF_EXISTS, stringArrayConditionOperationMatcher]
-]);
+const defaultConditionOperatorsHandlerManager = new ConditionOperatorsHandlerManager();
+const defaultConditionModifierHandlerManager = new ConditionModifierHandlerManager();
 
 export class ConditionEvaluator implements IConditionEvaluator {
   private conditionEvaluationFactory: TConditionEvaluationFactory;
-  private conditionOperationMatchersMap: TConditionOperationMatcherMap;
   private attributeConditionEvaluationFactory: TAttributeConditionEvaluationFactory;
+  private conditionOperatorsHandlerManager: IConditionOperatorsHandlerManager;
+  private conditionModifierHandlerManager: IConditionModifierHandlerManager;
 
   public constructor(options: TConditionEvaluatorConstructorOptions = {}) {
     this.conditionEvaluationFactory = options.conditionEvaluationFactory || defaultConditionEvaluationFactory;
     this.attributeConditionEvaluationFactory = options.attributeConditionEvaluationFactory || defaultAttributeConditionEvaluationFactory;
-    this.conditionOperationMatchersMap = options.conditionOperationMatchersMap || defaultConditionOperationMatchersMap;
+    this.conditionOperatorsHandlerManager = options.conditionOperatorsHandlerManager || defaultConditionOperatorsHandlerManager;
+    this.conditionModifierHandlerManager = options.conditionModifierHandlerManager || defaultConditionModifierHandlerManager;
   }
 
   public evaluate(condition: TPermissionCondition | null | undefined, environment: TEnvironment): IConditionEvaluation {
@@ -122,52 +56,37 @@ export class ConditionEvaluator implements IConditionEvaluator {
     const operators = Object.keys(condition);
 
     for (const operator of operators) {
-      const evaluation = this.evaluateForOperator(operator as ComparisonOperator, condition[operator], environment);
-      if (evaluation.failed()) {
-        return this.conditionEvaluationFactory({ result: false, failedAttributeConditionEvaluation: evaluation });
+      const operatorHandler: TConditionOperatorHandler = this.conditionOperatorsHandlerManager[operator];
+
+      if (typeof operatorHandler !== 'function') {
+        throw new UnmappedConditionOperatorError(operator);
+      }
+
+      const operatorDescription = condition[operator];
+      const modifiers = Object.keys(operatorDescription);
+
+      for (const modifier of modifiers) {
+        const modifierHandler: TConditionModifierHandler = this.conditionModifierHandlerManager[modifier];
+
+        if (typeof modifierHandler !== 'function') {
+          throw new UnmappedConditionModifierError(modifier);
+        }
+
+        const modifierHash = operatorDescription[modifier];
+        const attributePaths = Object.keys(modifierHash);
+
+        for (const attributePath of attributePaths) {
+          const environmentValue: any = Lodash.get(environment, attributePath);
+          const conditionValue = modifierHash[attributePath];
+          const result = modifierHandler.call(this.conditionModifierHandlerManager, operatorHandler.bind(this.conditionOperatorsHandlerManager), makeArray(conditionValue), environmentValue);
+
+          if (!result) {
+            return this.conditionEvaluationFactory({ result: false });
+          }
+        }
       }
     }
 
     return this.conditionEvaluationFactory({ result: true });
-  }
-
-  protected evaluateForOperator(operator: ComparisonOperator, operatorCondition: TPermissionOperatorCondition, environment: TEnvironment): IAttributeConditionEvaluation {
-    const canSkip = isIfExistsOperator(operator as any);
-    const attributeNames = Object.keys(operatorCondition);
-    let currentEvaluation: IAttributeConditionEvaluation | null = null;
-
-    for (const attributeName of attributeNames) {
-      const environmentValue = Lodash.get(environment, attributeName);
-
-      if (Lodash.isUndefined(environmentValue)) {
-        if (canSkip) {
-          currentEvaluation = this.attributeConditionEvaluationFactory({ result: true, operator, attributeName, environmentValue });
-        } else {
-          currentEvaluation = this.attributeConditionEvaluationFactory({ result: false, operator, attributeName, environmentValue });
-          break;
-        }
-      } else {
-        const matcher = this.getConditionOperationMatcherForOperator(operator);
-        const matches = matcher.matches(operator, makeArray(operatorCondition[attributeName]), environmentValue);
-        if (!matches) {
-          currentEvaluation = this.attributeConditionEvaluationFactory({ result: false, operator, attributeName, environmentValue });
-          break;
-        } else {
-          currentEvaluation = this.attributeConditionEvaluationFactory({ result: true, operator, attributeName, environmentValue });
-        }
-      }
-    }
-
-    return currentEvaluation as IAttributeConditionEvaluation;
-  }
-
-  protected getConditionOperationMatcherForOperator(operator: ComparisonOperator): IConditionOperationMatcher {
-    const matcher = this.conditionOperationMatchersMap.get(operator);
-
-    if (!matcher) {
-      throw new UnmappedConditionOperatorError(operator);
-    }
-
-    return matcher;
   }
 }
