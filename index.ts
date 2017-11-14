@@ -6,6 +6,8 @@ export { MemoryStore } from './src/classes/memory-store';
 export { ConditionEvaluator } from './src/classes/condition-evaluator';
 export { AttributeConditionEvaluation } from './src/classes/attribute-condition-evaluation';
 export { ConditionEvaluation } from './src/classes/condition-evaluation';
+export { ConditionModifierHandlersManager } from './src/classes/condition-modifier-handlers-manager';
+export { ConditionOperatorHandlersManager } from './src/classes/condition-operator-handlers-manager';
 
 export { IStore } from './src/interfaces/store';
 export { IAccessAuthorizer } from './src/interfaces/access-authorizer';

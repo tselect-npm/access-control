@@ -1,10 +1,16 @@
-import { IConditionModifierHandlerManager } from '../interfaces/condition-modifier-handler-manager';
+import { IConditionModifierHandlerManager } from '../interfaces/condition-modifier-handlers-manager';
 import { TConditionOperatorHandler } from '../types/condition-operator-handler';
 import { TComparisonValue } from '../types/comparison-value';
 import * as Lodash from 'lodash';
 
-export class ConditionModifierHandlerManager implements IConditionModifierHandlerManager {
+export class ConditionModifierHandlersManager implements IConditionModifierHandlerManager {
   public forAllValues(handler: TConditionOperatorHandler, conditionValues: TComparisonValue[], environmentValue: any): boolean {
+    for (const value of conditionValues) {
+      if (!handler(value, environmentValue)) {
+        return false;
+      }
+    }
+
     return true;
   }
 
@@ -17,7 +23,13 @@ export class ConditionModifierHandlerManager implements IConditionModifierHandle
   }
 
   public forAnyValue(handler: TConditionOperatorHandler, conditionValues: TComparisonValue[], environmentValue: any): boolean {
-    return true;
+    for (const value of conditionValues) {
+      if (handler(value, environmentValue)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   public forAnyValueIfExists(handler: TConditionOperatorHandler, conditionValues: TComparisonValue[], environmentValue: any): boolean {
@@ -36,7 +48,7 @@ export class ConditionModifierHandlerManager implements IConditionModifierHandle
     if (!this.exists(environmentValue)) {
       return true;
     }
-    return handler(conditionValues[0], environmentValue);
+    return this.exactValue(handler, conditionValues, environmentValue);
   }
 
   protected exists(value: any): boolean {

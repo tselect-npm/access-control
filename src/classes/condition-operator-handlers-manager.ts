@@ -1,8 +1,8 @@
-import { IConditionOperatorsHandlerManager } from '../interfaces/condition-operators-handler-manager';
+import { IConditionOperatorsHandlerManager } from '../interfaces/condition-operator-handlers-manager';
 import * as Lodash from 'lodash';
 import { InvalidConditionValueError } from './errors/invalid-condition-value';
 
-export class ConditionOperatorsHandlerManager implements IConditionOperatorsHandlerManager {
+export class ConditionOperatorHandlersManager implements IConditionOperatorsHandlerManager {
   public stringEquals(conditionValue: string, environmentValue: any): boolean {
     return true;
   }

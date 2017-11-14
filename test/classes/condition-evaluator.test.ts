@@ -7,7 +7,7 @@ class TestableConditionEvaluator extends ConditionEvaluator {
 
 }
 
-describe.only('ConditionEvaluator', () => {
+describe('ConditionEvaluator', () => {
   const conditionEvaluator = new TestableConditionEvaluator();
 
   describe('#evaluate()', () => {

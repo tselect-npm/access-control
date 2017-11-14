@@ -16,18 +16,18 @@ import { isIfExistsModifier } from '../utils/is-if-exists-modifier';
 import { AttributeConditionEvaluation } from './attribute-condition-evaluation';
 import { ConditionEvaluation } from './condition-evaluation';
 import { MalformedConditionError } from './errors/malformed-condition';
-import { ConditionOperatorsHandlerManager } from './condition-operators-handler-manager';
-import { IConditionOperatorsHandlerManager } from '../interfaces/condition-operators-handler-manager';
-import { ConditionModifierHandlerManager } from './condition-modifier-handler-manager';
-import { IConditionModifierHandlerManager } from '../interfaces/condition-modifier-handler-manager';
+import { ConditionOperatorHandlersManager } from './condition-operator-handlers-manager';
+import { IConditionOperatorsHandlerManager } from '../interfaces/condition-operator-handlers-manager';
+import { ConditionModifierHandlersManager } from './condition-modifier-handlers-manager';
+import { IConditionModifierHandlerManager } from '../interfaces/condition-modifier-handlers-manager';
 import { TConditionModifierHandler } from '../types/condition-modifier-handler';
 import { UnmappedConditionOperatorError } from './errors/unmapped-condition-operator';
 import { UnmappedConditionModifierError } from './errors/unmapped-condition-modifier';
 
 const defaultConditionEvaluationFactory = (options: TConditionEvaluationConstructorOptions) => new ConditionEvaluation(options);
 const defaultAttributeConditionEvaluationFactory = (options: TAttributeConditionEvaluationConstructorOptions) => new AttributeConditionEvaluation(options);
-const defaultConditionOperatorsHandlerManager = new ConditionOperatorsHandlerManager();
-const defaultConditionModifierHandlerManager = new ConditionModifierHandlerManager();
+const defaultConditionOperatorsHandlerManager = new ConditionOperatorHandlersManager();
+const defaultConditionModifierHandlerManager = new ConditionModifierHandlersManager();
 
 export class ConditionEvaluator implements IConditionEvaluator {
   private conditionEvaluationFactory: TConditionEvaluationFactory;

@@ -1,7 +1,7 @@
 import { TConditionEvaluationFactory } from './condition-evaluation-factory';
 import { TAttributeConditionEvaluationFactory } from './attribute-condition-evaluation-factory';
-import { IConditionOperatorsHandlerManager } from '../interfaces/condition-operators-handler-manager';
-import { IConditionModifierHandlerManager } from '../interfaces/condition-modifier-handler-manager';
+import { IConditionOperatorsHandlerManager } from '../interfaces/condition-operator-handlers-manager';
+import { IConditionModifierHandlerManager } from '../interfaces/condition-modifier-handlers-manager';
 
 export type TConditionEvaluatorConstructorOptions = {
   conditionEvaluationFactory?: TConditionEvaluationFactory;
