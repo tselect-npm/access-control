@@ -23,6 +23,8 @@ import { IConditionModifierHandlerManager } from '../interfaces/condition-modifi
 import { TConditionModifierHandler } from '../types/condition-modifier-handler';
 import { UnmappedConditionOperatorError } from './errors/unmapped-condition-operator';
 import { UnmappedConditionModifierError } from './errors/unmapped-condition-modifier';
+import { InvalidEnvironmentValueError } from './errors/invalid-enviroment-value';
+import { InvalidConditionValueError } from './errors/invalid-condition-value';
 
 const defaultConditionEvaluationFactory = (options: TConditionEvaluationConstructorOptions) => new ConditionEvaluation(options);
 const defaultAttributeConditionEvaluationFactory = (options: TAttributeConditionEvaluationConstructorOptions) => new AttributeConditionEvaluation(options);
@@ -78,7 +80,25 @@ export class ConditionEvaluator implements IConditionEvaluator {
         for (const attributePath of attributePaths) {
           const environmentValue: any = Lodash.get(environment, attributePath);
           const conditionValue = modifierHash[attributePath];
-          const result = modifierHandler.call(this.conditionModifierHandlerManager, operatorHandler.bind(this.conditionOperatorsHandlerManager), makeArray(conditionValue), environmentValue);
+
+          let result: boolean;
+
+          try {
+            result = modifierHandler.call(this.conditionModifierHandlerManager,
+              operatorHandler.bind(this.conditionOperatorsHandlerManager),
+              makeArray(conditionValue),
+              environmentValue
+            );
+          } catch (err) {
+            switch (true) {
+              case InvalidEnvironmentValueError.hasInstance(err):
+              case InvalidConditionValueError.hasInstance(err):
+                err.setModifier(modifier).setOperator(operator);
+                throw err;
+              default:
+                throw err;
+            }
+          }
 
           if (!result) {
             return this.conditionEvaluationFactory({ result: false });

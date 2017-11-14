@@ -17,6 +17,9 @@ import { TAuthorizerConstructorOptions } from '../types/authorizer-constructor-o
 import { TAccessConstructorOptions } from '../types/access-constructor-options';
 import { TAccessFactory } from '../types/access-factory';
 import { DecisionCode } from '../constants/decision-code';
+import { IConditionEvaluation } from '../interfaces/condition-evaluation';
+import { InvalidEnvironmentValueError } from './errors/invalid-enviroment-value';
+import { InvalidConditionValueError } from './errors/invalid-condition-value';
 
 const defaultAccessFactory = (options?: TAccessConstructorOptions) => new Access(options);
 const defaultConditionEvaluator = new ConditionEvaluator();
@@ -74,7 +77,20 @@ export class AccessAuthorizer implements IAccessAuthorizer {
     const denyPermissions = relevantPermissions.filter(permission => permission.effect === PermissionEffect.DENY);
 
     for (const permission of denyPermissions) {
-      const evaluation = this.conditionEvaluator.evaluate(permission.condition, environment);
+      let evaluation: IConditionEvaluation;
+
+      try {
+        evaluation = this.conditionEvaluator.evaluate(permission.condition, environment);
+      } catch (err) {
+        switch (true) {
+          case InvalidEnvironmentValueError.hasInstance(err):
+          case InvalidConditionValueError.hasInstance(err):
+            err.setPermissionId(permission.id);
+            throw err;
+          default:
+            throw err;
+        }
+      }
       // Meeting a deny permission's condition means that the permission is applicable and therefore that the access
       // is denied.
       if (evaluation.succeeded()) {
