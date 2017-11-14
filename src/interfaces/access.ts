@@ -1,20 +1,21 @@
 import { TPermission } from '../types/permission';
 import { DecisionCode } from '../constants/decision-code';
-import { IConditionEvaluation } from './condition-evaluation';
 import { TAccessJSON } from '../types/access-json';
+import { TEnvironment } from '../types/environment';
+import { TAccessJournal, TAccessJournalEntry } from '../types/access-journal';
 
 export interface IAccess {
   isAllowed(): boolean;
   isDenied(): boolean;
-  allow(): this;
-  deny(): this;
+  allow(decisivePermission: TPermission): this;
+  deny(code: DecisionCode, decisivePermission?: TPermission): this;
+  getEnvironment(): TEnvironment | null | undefined;
   setDecisivePermission(permission: TPermission): this;
   getDecisivePermission(): TPermission | null;
-  setDecisionCode(code: DecisionCode): this;
   getDecisionCode(): DecisionCode;
-  setConsideredPermissions(permissions: TPermission[]): this;
+  isEvaluated(): boolean;
   getConsideredPermissions(): TPermission[];
-  setDecisiveConditionEvaluation(conditionEvaluation: IConditionEvaluation): this;
-  getDecisiveConditionEvaluation(): IConditionEvaluation | null;
+  getJournal(): TAccessJournal;
+  logJournalEntry(entry: TAccessJournalEntry): this;
   toJSON(): TAccessJSON;
 }

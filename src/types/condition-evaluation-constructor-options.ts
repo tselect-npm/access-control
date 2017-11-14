@@ -1,6 +1,5 @@
-import { IAttributeConditionEvaluation } from '../interfaces/attribute-condition-evaluation';
+import { TPermissionCondition } from './permission-condition';
 
 export type TConditionEvaluationConstructorOptions = {
-  result: boolean;
-  failedAttributeConditionEvaluation?: IAttributeConditionEvaluation | null;
-};
+  condition: TPermissionCondition | null | undefined;
+}

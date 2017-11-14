@@ -1,6 +1,12 @@
-import { TAttributeConditionEvaluationJSON } from './attribute-condition-evaluation-json';
+import { ConditionEvaluationResultCode } from '../constants/condition-evaluation-result-code';
+import { ConditionEvaluationErrorCode } from '../constants/condition-evaluation-error-code';
+import { TConditionEvaluationErrorDetails } from './condition-evaluation-error-details';
+import { TPermissionCondition } from './permission-condition';
 
 export type TConditionEvaluationJSON = {
-  result: boolean;
-  failedAttributeConditionEvaluation: TAttributeConditionEvaluationJSON | null
+  succeeded: boolean;
+  resultCode: ConditionEvaluationResultCode;
+  errorCode: ConditionEvaluationErrorCode | null;
+  errorDetails: TConditionEvaluationErrorDetails | null;
+  condition: TPermissionCondition;
 };

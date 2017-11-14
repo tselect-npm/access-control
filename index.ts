@@ -4,8 +4,6 @@ export { Access } from './src/classes/access';
 export { Store } from './src/classes/store';
 export { MemoryStore } from './src/classes/memory-store';
 export { ConditionEvaluator } from './src/classes/condition-evaluator';
-export { AttributeConditionEvaluation } from './src/classes/attribute-condition-evaluation';
-export { ConditionEvaluation } from './src/classes/condition-evaluation';
 export { ConditionModifierHandlersManager } from './src/classes/condition-modifier-handlers-manager';
 export { ConditionOperatorHandlersManager } from './src/classes/condition-operator-handlers-manager';
 
@@ -20,6 +18,7 @@ export { TResource } from './src/types/resource';
 export { TAction } from './src/types/action';
 
 export { PermissionEffect } from './src/constants/permission-effect';
+export { DecisionCode } from './src/constants/decision-code';
 export { ConditionOperator } from './src/constants/condition-operator';
 export { RESOURCE_PARTS_SEPARATOR } from './src/constants/resource-parts-separator';
 export { WILD_CARD } from './src/constants/wild-card';

@@ -2,31 +2,31 @@ import { IAccess } from '../interfaces/access';
 import { TPermission } from '../types/permission';
 import { TAccessConstructorOptions } from '../types/access-constructor-options';
 import { DecisionCode } from '../constants/decision-code';
-import { IConditionEvaluation } from '../interfaces/condition-evaluation';
 import { TAccessJSON } from '../types/access-json';
+import { TEnvironment } from '../types/environment';
+import { TAccessJournal, TAccessJournalEntry } from '../types/access-journal';
 
 export class Access implements IAccess {
-  private allowed: boolean;
+  private journal: TAccessJournal;
   private decisionCode: DecisionCode;
   private decisivePermission: TPermission | null;
   private consideredPermissions: TPermission[];
-  private decisiveConditionEvaluation: IConditionEvaluation | null;
+  private environment: TEnvironment | null | undefined;
 
-  public constructor(options: TAccessConstructorOptions = {}) {
-    this.allowed = options.allowed || false;
-    this.decisionCode = options.decisionCode || DecisionCode.NOT_EVALUATED;
-    this.decisivePermission = options.decisivePermission || null;
-    this.decisiveConditionEvaluation = options.decisiveConditionEvaluation || null;
-    this.consideredPermissions = options.consideredPermissions || [];
+  public constructor(options: TAccessConstructorOptions) {
+    this.environment = options.environment;
+    this.consideredPermissions = options.consideredPermissions;
+    this.journal = [];
+    this.decisionCode = DecisionCode.NOT_EVALUATED;
+    this.decisivePermission = null;
   }
 
-  public setDecisiveConditionEvaluation(conditionEvaluation: IConditionEvaluation): this {
-    this.decisiveConditionEvaluation = conditionEvaluation;
-    return this;
+  public getDecisionCode(): DecisionCode {
+    return this.decisionCode;
   }
 
-  public getDecisiveConditionEvaluation(): IConditionEvaluation | null {
-    return this.decisiveConditionEvaluation;
+  public isEvaluated(): boolean {
+    return this.decisionCode !== DecisionCode.NOT_EVALUATED;
   }
 
   public setDecisivePermission(permission: TPermission): this {
@@ -38,49 +38,51 @@ export class Access implements IAccess {
     return this.decisivePermission;
   }
 
-  public setDecisionCode(code: DecisionCode): this {
-    this.decisionCode = code;
-    return this;
-  }
-
-  public getDecisionCode(): DecisionCode {
-    return this.decisionCode;
-  }
-
-  public setConsideredPermissions(permissions: TPermission[]): this {
-    this.consideredPermissions = permissions;
-    return this;
-  }
-
   public getConsideredPermissions(): TPermission[] {
     return this.consideredPermissions;
   }
 
-  public deny() {
-    this.allowed = false;
+  public getJournal(): TAccessJournal {
+    return this.journal;
+  }
+
+  public logJournalEntry(entry: TAccessJournalEntry): this {
+    this.journal.push(entry);
     return this;
   }
 
-  public allow() {
-    this.allowed = true;
+  public getEnvironment(): TEnvironment | null | undefined {
+    return this.environment;
+  }
+
+  public deny(code: DecisionCode, decisivePermission: TPermission | null = null): this {
+    this.decisionCode = code;
+    this.decisivePermission = decisivePermission;
     return this;
   }
 
-  public isDenied() {
-    return !this.allowed;
+  public allow(decisivePermission: TPermission) {
+    this.decisionCode = DecisionCode.EXPLICITLY_ALLOWED;
+    this.decisivePermission = decisivePermission;
+    return this;
   }
 
   public isAllowed() {
-    return this.allowed;
+    return this.decisionCode === DecisionCode.EXPLICITLY_ALLOWED;
+  }
+
+  public isDenied() {
+    return !this.isAllowed();
   }
 
   public toJSON(): TAccessJSON {
     return <TAccessJSON>{
-      allowed: this.allowed,
+      allowed: this.isAllowed(),
       decisionCode: this.decisionCode,
       decisivePermission: this.decisivePermission,
-      decisiveConditionEvaluation: this.decisiveConditionEvaluation ? this.decisiveConditionEvaluation.toJSON() : null,
-      consideredPermissions: this.consideredPermissions
+      consideredPermissions: this.consideredPermissions,
+      environment: this.environment,
+      journal: this.journal
     };
   }
 }

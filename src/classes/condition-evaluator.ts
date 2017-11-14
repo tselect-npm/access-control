@@ -1,58 +1,49 @@
 import { makeArray } from '@bluejay/utils';
 import * as Lodash from 'lodash';
-import { ConditionOperator } from '../constants/condition-operator';
-import { IAttributeConditionEvaluation } from '../interfaces/attribute-condition-evaluation';
-import { IConditionEvaluation } from '../interfaces/condition-evaluation';
 import { IConditionEvaluator } from '../interfaces/condition-evaluator';
-import { TAttributeConditionEvaluationConstructorOptions } from '../types/attribute-condition-evaluation-constructor-options';
-import { TAttributeConditionEvaluationFactory } from '../types/attribute-condition-evaluation-factory';
-import { TConditionEvaluationConstructorOptions } from '../types/condition-evaluation-constructor-options';
-import { TConditionEvaluationFactory } from '../types/condition-evaluation-factory';
 import { TConditionEvaluatorConstructorOptions } from '../types/condition-evaluator-constructor-options';
 import { TConditionOperatorHandler } from '../types/condition-operator-handler';
 import { TEnvironment } from '../types/environment';
 import { TPermissionCondition } from '../types/permission-condition';
-import { isIfExistsModifier } from '../utils/is-if-exists-modifier';
-import { AttributeConditionEvaluation } from './attribute-condition-evaluation';
-import { ConditionEvaluation } from './condition-evaluation';
-import { MalformedConditionError } from './errors/malformed-condition';
 import { ConditionOperatorHandlersManager } from './condition-operator-handlers-manager';
 import { IConditionOperatorsHandlerManager } from '../interfaces/condition-operator-handlers-manager';
 import { ConditionModifierHandlersManager } from './condition-modifier-handlers-manager';
 import { IConditionModifierHandlerManager } from '../interfaces/condition-modifier-handlers-manager';
 import { TConditionModifierHandler } from '../types/condition-modifier-handler';
-import { UnmappedConditionOperatorError } from './errors/unmapped-condition-operator';
-import { UnmappedConditionModifierError } from './errors/unmapped-condition-modifier';
 import { InvalidEnvironmentValueError } from './errors/invalid-enviroment-value';
 import { InvalidConditionValueError } from './errors/invalid-condition-value';
+import { ConditionEvaluationErrorCode } from '../constants/condition-evaluation-error-code';
+import { ConditionEvaluation } from './condition-evaluation';
+import { ConditionOperator } from '../constants/condition-operator';
+import { ConditionModifier } from '../constants/condition-modifier';
+import { TConditionEvaluationConstructorOptions } from '../types/condition-evaluation-constructor-options';
+import { TConditionEvaluationFactory } from '../types/condition-evaluation-factory';
+import { IConditionEvaluation } from '../interfaces/condition-evaluation';
 
-const defaultConditionEvaluationFactory = (options: TConditionEvaluationConstructorOptions) => new ConditionEvaluation(options);
-const defaultAttributeConditionEvaluationFactory = (options: TAttributeConditionEvaluationConstructorOptions) => new AttributeConditionEvaluation(options);
 const defaultConditionOperatorsHandlerManager = new ConditionOperatorHandlersManager();
 const defaultConditionModifierHandlerManager = new ConditionModifierHandlersManager();
+const defaultConditionEvaluationFactory = (options: TConditionEvaluationConstructorOptions) => new ConditionEvaluation(options);
 
 export class ConditionEvaluator implements IConditionEvaluator {
-  private conditionEvaluationFactory: TConditionEvaluationFactory;
-  private attributeConditionEvaluationFactory: TAttributeConditionEvaluationFactory;
   private conditionOperatorsHandlerManager: IConditionOperatorsHandlerManager;
   private conditionModifierHandlerManager: IConditionModifierHandlerManager;
+  private conditionEvaluationFactory: TConditionEvaluationFactory;
 
   public constructor(options: TConditionEvaluatorConstructorOptions = {}) {
-    this.conditionEvaluationFactory = options.conditionEvaluationFactory || defaultConditionEvaluationFactory;
-    this.attributeConditionEvaluationFactory = options.attributeConditionEvaluationFactory || defaultAttributeConditionEvaluationFactory;
     this.conditionOperatorsHandlerManager = options.conditionOperatorsHandlerManager || defaultConditionOperatorsHandlerManager;
     this.conditionModifierHandlerManager = options.conditionModifierHandlerManager || defaultConditionModifierHandlerManager;
+    this.conditionEvaluationFactory = options.conditionEvaluationFactory || defaultConditionEvaluationFactory;
   }
 
   public evaluate(condition: TPermissionCondition | null | undefined, environment: TEnvironment): IConditionEvaluation {
-    // No condition means no evaluation
+    const evaluation = this.conditionEvaluationFactory({ condition });
+
     if (!condition) {
-      return this.conditionEvaluationFactory({ result: true });
+      return evaluation.succeed();
     }
 
-    // Malformed condition
     if (!Lodash.isPlainObject(condition)) {
-      throw new MalformedConditionError(condition);
+      return evaluation.error(ConditionEvaluationErrorCode.MALFORMED_CONDITION, { value: condition });
     }
 
     const operators = Object.keys(condition);
@@ -61,7 +52,7 @@ export class ConditionEvaluator implements IConditionEvaluator {
       const operatorHandler: TConditionOperatorHandler = this.conditionOperatorsHandlerManager[operator];
 
       if (typeof operatorHandler !== 'function') {
-        throw new UnmappedConditionOperatorError(operator);
+        return evaluation.error(ConditionEvaluationErrorCode.UNKNOWN_OPERATOR, { value: operator });
       }
 
       const operatorDescription = condition[operator];
@@ -71,7 +62,7 @@ export class ConditionEvaluator implements IConditionEvaluator {
         const modifierHandler: TConditionModifierHandler = this.conditionModifierHandlerManager[modifier];
 
         if (typeof modifierHandler !== 'function') {
-          throw new UnmappedConditionModifierError(modifier);
+          return evaluation.error(ConditionEvaluationErrorCode.UNKNOWN_MODIFIER, { value: modifier });
         }
 
         const modifierHash = operatorDescription[modifier];
@@ -81,10 +72,10 @@ export class ConditionEvaluator implements IConditionEvaluator {
           const environmentValue: any = Lodash.get(environment, attributePath);
           const conditionValue = modifierHash[attributePath];
 
-          let result: boolean;
+          let matches: boolean;
 
           try {
-            result = modifierHandler.call(this.conditionModifierHandlerManager,
+            matches = modifierHandler.call(this.conditionModifierHandlerManager,
               operatorHandler.bind(this.conditionOperatorsHandlerManager),
               makeArray(conditionValue),
               environmentValue
@@ -92,21 +83,33 @@ export class ConditionEvaluator implements IConditionEvaluator {
           } catch (err) {
             switch (true) {
               case InvalidEnvironmentValueError.hasInstance(err):
+                return evaluation.error(ConditionEvaluationErrorCode.INVALID_ENVIRONMENT_VALUE, {
+                  value: environmentValue,
+                  operator: operator as ConditionOperator,
+                  modifier: modifier as ConditionModifier,
+                  attribute: attributePath
+                });
               case InvalidConditionValueError.hasInstance(err):
-                err.setModifier(modifier).setOperator(operator);
-                throw err;
+                return evaluation.error(ConditionEvaluationErrorCode.INVALID_CONDITION_VALUE, {
+                  value: environmentValue,
+                  operator: operator as ConditionOperator,
+                  modifier: modifier as ConditionModifier,
+                  attribute: attributePath
+                });
               default:
                 throw err;
             }
           }
 
-          if (!result) {
-            return this.conditionEvaluationFactory({ result: false });
+          // Return early if any handler failed.
+          if (!matches) {
+            return evaluation.fail();
           }
         }
       }
     }
 
-    return this.conditionEvaluationFactory({ result: true });
+    // If we haven't returned yet, that means that all conditions were met and the evaluation is a success.
+    return evaluation.succeed();
   }
 }

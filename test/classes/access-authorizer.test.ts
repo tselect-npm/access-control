@@ -1,7 +1,4 @@
-import { AccessAuthorizer, PermissionEffect, TPermission, TResource, TAction } from '../../';
-import { DecisionCode } from '../../src/constants/decision-code';
-import { IAttributeConditionEvaluation } from '../../src/interfaces/attribute-condition-evaluation';
-import { IConditionEvaluation } from '../../src/interfaces/condition-evaluation';
+import { AccessAuthorizer, PermissionEffect, TPermission, TResource, TAction, DecisionCode } from '../../';
 
 class TestableAuthorizer extends AccessAuthorizer {
   public filterRelevantPermissions(resource: TResource, action: TAction, permissions: TPermission[]): TPermission[] {
@@ -9,7 +6,7 @@ class TestableAuthorizer extends AccessAuthorizer {
   }
 }
 
-describe('AccessAuthorizer', () => {
+describe.only('AccessAuthorizer', () => {
   describe('#filterRelevantPermissions()', () => {
     const permissions: TPermission[] = [
       { id: '1', effect: PermissionEffect.DENY, resource: 'tables:post', action: 'create' },
@@ -82,7 +79,7 @@ describe('AccessAuthorizer', () => {
 
       const access = authorizer.authorize('tables:post', 'create', permissions);
       expect(access.isAllowed()).to.equal(false);
-      expect(access.getDecisionCode()).to.equal(DecisionCode.EXPLICIT_DENY);
+      expect(access.getDecisionCode()).to.equal(DecisionCode.EXPLICITLY_DENIED);
       expect((<TPermission>access.getDecisivePermission()).id).to.equal('1');
       expect(access.getConsideredPermissions().map(perm => perm.id)).to.have.members(['1', '6']);
     });
@@ -100,7 +97,7 @@ describe('AccessAuthorizer', () => {
 
       const access = authorizer.authorize('tables:foo', 'create', permissions);
       expect(access.isAllowed()).to.equal(true);
-      expect(access.getDecisionCode()).to.equal(DecisionCode.EXPLICIT_ALLOW);
+      expect(access.getDecisionCode()).to.equal(DecisionCode.EXPLICITLY_ALLOWED);
       expect((<TPermission>access.getDecisivePermission()).id).to.equal('6');
       expect(access.getConsideredPermissions().map(perm => perm.id)).to.have.members(['6']);
     });
@@ -118,7 +115,7 @@ describe('AccessAuthorizer', () => {
 
       const access = authorizer.authorize('tables:foo', 'count', permissions);
       expect(access.isAllowed()).to.equal(true);
-      expect(access.getDecisionCode()).to.equal(DecisionCode.EXPLICIT_ALLOW);
+      expect(access.getDecisionCode()).to.equal(DecisionCode.EXPLICITLY_ALLOWED);
       expect((<TPermission>access.getDecisivePermission()).id).to.equal('3');
       expect(access.getConsideredPermissions().map(perm => perm.id)).to.have.members(['3']);
     });
@@ -136,7 +133,7 @@ describe('AccessAuthorizer', () => {
 
       const access = authorizer.authorize('tables:user', 'count', permissions);
       expect(access.isAllowed()).to.equal(false);
-      expect(access.getDecisionCode()).to.equal(DecisionCode.EXPLICIT_DENY);
+      expect(access.getDecisionCode()).to.equal(DecisionCode.EXPLICITLY_DENIED);
       expect((<TPermission>access.getDecisivePermission()).id).to.equal('4');
       expect(access.getConsideredPermissions().map(perm => perm.id)).to.have.members(['3', '4']);
     });
@@ -144,7 +141,7 @@ describe('AccessAuthorizer', () => {
     it('should deny because no relevant permissions', () => {
       const access = authorizer.authorize('tables:user', 'count', []);
       expect(access.isAllowed()).to.equal(false);
-      expect(access.getDecisionCode()).to.equal(DecisionCode.NO_RELEVANT_PERMISSIONS);
+      expect(access.getDecisionCode()).to.equal(DecisionCode.NO_RELEVANT_PERMISSION_FOUND);
       expect(access.getConsideredPermissions()).to.deep.equal([]);
     });
 
@@ -165,7 +162,7 @@ describe('AccessAuthorizer', () => {
 
       const access = authorizer.authorize('tables:post', 'create', permissions, { foo: 17 });
       expect(access.isAllowed()).to.equal(false);
-      expect(access.getDecisionCode()).to.equal(DecisionCode.EXPLICIT_DENY);
+      expect(access.getDecisionCode()).to.equal(DecisionCode.EXPLICITLY_DENIED);
       expect((<TPermission>access.getDecisivePermission()).id).to.equal('1');
       expect(access.getConsideredPermissions().map(perm => perm.id)).to.deep.equal(['1']);
     });
@@ -187,7 +184,7 @@ describe('AccessAuthorizer', () => {
 
       const access = authorizer.authorize('tables:post', 'create', permissions, { foo: 12 });
       expect(access.isAllowed()).to.equal(false);
-      expect(access.getDecisionCode()).to.equal(DecisionCode.NO_ALLOW_PERMISSIONS);
+      expect(access.getDecisionCode()).to.equal(DecisionCode.NO_ALLOW_PERMISSION_FOUND);
       expect(access.getDecisivePermission()).to.equal(null);
       expect(access.getConsideredPermissions().map(perm => perm.id)).to.deep.equal(['1']);
     });

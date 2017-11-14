@@ -1,10 +1,26 @@
+import {
+  TConditionEvaluationErrorDetails} from '../types/condition-evaluation-error-details';
+import { ConditionEvaluationErrorCode } from '../constants/condition-evaluation-error-code';
+import {
+  TConditionEvaluationInvalidConditionValueErrorDetails,
+  TConditionEvaluationInvalidEnvironmentValueErrorDetails,
+  TConditionEvaluationMalformedConditionErrorDetails, TConditionEvaluationUnknownModifierErrorDetails,
+  TConditionEvaluationUnknownOperatorErrorDetails
+} from '../types/condition-evaluation-error-details';
 import { TConditionEvaluationJSON } from '../types/condition-evaluation-json';
-import { IAttributeConditionEvaluation } from './attribute-condition-evaluation';
 
 export interface IConditionEvaluation {
-  getResult(): boolean;
   succeeded(): boolean;
   failed(): boolean;
-  getFailedAttributeConditionEvaluation(): IAttributeConditionEvaluation | null;
+  errored(): boolean;
+  isKnown(): boolean;
+  fail(): this;
+  succeed(): this
+  error(code: ConditionEvaluationErrorCode.MALFORMED_CONDITION, details: TConditionEvaluationMalformedConditionErrorDetails): this;
+  error(code: ConditionEvaluationErrorCode.UNKNOWN_OPERATOR, details: TConditionEvaluationUnknownOperatorErrorDetails): this;
+  error(code: ConditionEvaluationErrorCode.UNKNOWN_MODIFIER, details: TConditionEvaluationUnknownModifierErrorDetails): this;
+  error(code: ConditionEvaluationErrorCode.INVALID_CONDITION_VALUE, details: TConditionEvaluationInvalidConditionValueErrorDetails): this;
+  error(code: ConditionEvaluationErrorCode.INVALID_ENVIRONMENT_VALUE, details: TConditionEvaluationInvalidEnvironmentValueErrorDetails): this;
+  error(code: ConditionEvaluationErrorCode, details: TConditionEvaluationErrorDetails): this;
   toJSON(): TConditionEvaluationJSON;
 }

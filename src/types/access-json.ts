@@ -1,11 +1,14 @@
 import { DecisionCode } from '../constants/decision-code';
+import { TAccessJournal } from './access-journal';
+import { TEnvironment } from './environment';
 import { TPermission } from './permission';
-import { TConditionEvaluationJSON } from './condition-evaluation-json';
 
 export type TAccessJSON = {
   allowed: boolean;
   decisionCode: DecisionCode;
-  decisivePermission: TPermission | null;
   consideredPermissions: TPermission[];
-  decisiveConditionEvaluation: TConditionEvaluationJSON | null;
+  environment: TEnvironment | null;
+  decisivePermission: TPermission | null;
+
+  journal: TAccessJournal;
 };
