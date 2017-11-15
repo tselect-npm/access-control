@@ -6,7 +6,7 @@ class TestableAuthorizer extends AccessAuthorizer {
   }
 }
 
-describe.only('AccessAuthorizer', () => {
+describe('AccessAuthorizer', () => {
   describe('#filterRelevantPermissions()', () => {
     const permissions: TPermission[] = [
       { id: '1', effect: PermissionEffect.DENY, resource: 'tables:post', action: 'create' },
@@ -184,7 +184,7 @@ describe.only('AccessAuthorizer', () => {
 
       const access = authorizer.authorize('tables:post', 'create', permissions, { foo: 12 });
       expect(access.isAllowed()).to.equal(false);
-      expect(access.getDecisionCode()).to.equal(DecisionCode.NO_ALLOW_PERMISSION_FOUND);
+      expect(access.getDecisionCode()).to.equal(DecisionCode.NO_EXPLICIT_ALLOW_PERMISSION_FOUND);
       expect(access.getDecisivePermission()).to.equal(null);
       expect(access.getConsideredPermissions().map(perm => perm.id)).to.deep.equal(['1']);
     });
@@ -206,9 +206,8 @@ describe.only('AccessAuthorizer', () => {
 
       const access = authorizer.authorize('tables:post', 'create', permissions, { foo: 12 });
       expect(access.isAllowed()).to.equal(false);
-      expect(access.getDecisionCode()).to.equal(DecisionCode.EXPLICIT_ALLOW_FAILED_CONDITION);
+      expect(access.getDecisionCode()).to.equal(DecisionCode.EXPLICIT_ALLOW_CONDITION_FAILED);
       expect((<TPermission>access.getDecisivePermission()).id).to.equal('1');
-      // expect((<IAttributeConditionEvaluation>(<IConditionEvaluation>access.getDecisiveConditionEvaluation()).getFailedAttributeConditionEvaluation()).getAttributeName()).to.equal('foo');
       expect(access.getConsideredPermissions().map(perm => perm.id)).to.deep.equal(['1']);
     });
   });

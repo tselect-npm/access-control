@@ -8,6 +8,7 @@ import {
   TConditionEvaluationUnknownOperatorErrorDetails
 } from '../types/condition-evaluation-error-details';
 import { TConditionEvaluationJSON } from '../types/condition-evaluation-json';
+import { ConditionEvaluationResultCode } from '../constants/condition-evaluation-result-code';
 
 export interface IConditionEvaluation {
   succeeded(): boolean;
@@ -16,6 +17,9 @@ export interface IConditionEvaluation {
   isKnown(): boolean;
   fail(): this;
   succeed(): this
+  getResultCode(): ConditionEvaluationResultCode;
+  getErrorCode(): ConditionEvaluationErrorCode | null;
+  getErrorDetails(): TConditionEvaluationErrorDetails | null;
   error(code: ConditionEvaluationErrorCode.MALFORMED_CONDITION, details: TConditionEvaluationMalformedConditionErrorDetails): this;
   error(code: ConditionEvaluationErrorCode.UNKNOWN_OPERATOR, details: TConditionEvaluationUnknownOperatorErrorDetails): this;
   error(code: ConditionEvaluationErrorCode.UNKNOWN_MODIFIER, details: TConditionEvaluationUnknownModifierErrorDetails): this;

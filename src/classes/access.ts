@@ -80,8 +80,8 @@ export class Access implements IAccess {
       allowed: this.isAllowed(),
       decisionCode: this.decisionCode,
       decisivePermission: this.decisivePermission,
-      consideredPermissions: this.consideredPermissions,
       environment: this.environment,
+      consideredPermissions: this.consideredPermissions,
       journal: this.journal
     };
   }

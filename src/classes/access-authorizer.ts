@@ -17,7 +17,6 @@ import { TAuthorizerConstructorOptions } from '../types/authorizer-constructor-o
 import { TAccessConstructorOptions } from '../types/access-constructor-options';
 import { TAccessFactory } from '../types/access-factory';
 import { DecisionCode } from '../constants/decision-code';
-import { IConditionEvaluation } from '../interfaces/condition-evaluation';
 
 const defaultAccessFactory = (options: TAccessConstructorOptions) => new Access(options);
 const defaultConditionEvaluator = new ConditionEvaluator();
@@ -34,6 +33,8 @@ export class AccessAuthorizer implements IAccessAuthorizer {
   public authorize(resource: TResource, action: TAction, permissions: TPermission[], environment: TEnvironment = {}): IAccess {
     // Only evaluate relevant permissions if those haven't yet been filtered by the store.
     const relevantPermissions = this.filterRelevantPermissions(resource, action, permissions);
+
+    // Create the access.
     const access = this.accessFactory({ consideredPermissions: relevantPermissions, environment });
 
     if (!relevantPermissions.length) {
@@ -44,14 +45,9 @@ export class AccessAuthorizer implements IAccessAuthorizer {
     const denyPermissions = relevantPermissions.filter(permission => permission.effect === PermissionEffect.DENY);
 
     for (const permission of denyPermissions) {
-      let evaluation: IConditionEvaluation;
+      const evaluation = this.conditionEvaluator.evaluate(permission.condition, environment);
+      access.logJournalEntry({ permissionId: permission.id, conditionEvaluation: evaluation.toJSON() });
 
-      try {
-        evaluation = this.conditionEvaluator.evaluate(permission.condition, environment);
-        access.logJournalEntry({ permission, conditionEvaluation: evaluation.toJSON() });
-      } catch (err) {
-        return access.deny(DecisionCode.PERMISSION_CONDITION_ERRORED, permission);
-      }
       // Meeting a deny permission's condition means that the permission is applicable and therefore that the access
       // is denied.
       if (evaluation.succeeded()) {
@@ -62,22 +58,22 @@ export class AccessAuthorizer implements IAccessAuthorizer {
     // We then evaluate allow permissions, and allow access if any is fulfilled.
     const allowPermissions = relevantPermissions.filter(permission => permission.effect === PermissionEffect.ALLOW);
 
+    // Return early if no relevant allow permission was found.
     if (!allowPermissions.length) {
-      return access.deny(DecisionCode.NO_ALLOW_PERMISSION_FOUND);
+      return access.deny(DecisionCode.NO_EXPLICIT_ALLOW_PERMISSION_FOUND);
     }
 
     for (const permission of allowPermissions) {
       const evaluation = this.conditionEvaluator.evaluate(permission.condition, environment);
-      access.logJournalEntry({ permission, conditionEvaluation: evaluation.toJSON() });
+      access.logJournalEntry({ permissionId: permission.id, conditionEvaluation: evaluation.toJSON() });
+
       if (evaluation.succeeded()) {
         return access.allow(permission);
-      } else {
-        access.deny(DecisionCode.EXPLICIT_ALLOW_FAILED_CONDITION, permission);
       }
     }
 
-    // If no explicit allow, the access is reputed denied
-    return access.deny(DecisionCode.NO_ALLOW_PERMISSION_FOUND);
+    // We retain the last event as the decisive one.
+    return access.deny(DecisionCode.EXPLICIT_ALLOW_CONDITION_FAILED, allowPermissions[allowPermissions.length - 1]);
   }
 
   protected filterRelevantPermissions(resource: TResource, action: TAction, permissions: TPermission[]): TPermission[] {

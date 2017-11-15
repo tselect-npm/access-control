@@ -16,13 +16,12 @@ import { ConditionEvaluationErrorCode } from '../constants/condition-evaluation-
 import { ConditionEvaluation } from './condition-evaluation';
 import { ConditionOperator } from '../constants/condition-operator';
 import { ConditionModifier } from '../constants/condition-modifier';
-import { TConditionEvaluationConstructorOptions } from '../types/condition-evaluation-constructor-options';
 import { TConditionEvaluationFactory } from '../types/condition-evaluation-factory';
 import { IConditionEvaluation } from '../interfaces/condition-evaluation';
 
 const defaultConditionOperatorsHandlerManager = new ConditionOperatorHandlersManager();
 const defaultConditionModifierHandlerManager = new ConditionModifierHandlersManager();
-const defaultConditionEvaluationFactory = (options: TConditionEvaluationConstructorOptions) => new ConditionEvaluation(options);
+const defaultConditionEvaluationFactory = () => new ConditionEvaluation();
 
 export class ConditionEvaluator implements IConditionEvaluator {
   private conditionOperatorsHandlerManager: IConditionOperatorsHandlerManager;
@@ -36,7 +35,7 @@ export class ConditionEvaluator implements IConditionEvaluator {
   }
 
   public evaluate(condition: TPermissionCondition | null | undefined, environment: TEnvironment): IConditionEvaluation {
-    const evaluation = this.conditionEvaluationFactory({ condition });
+    const evaluation = this.conditionEvaluationFactory();
 
     if (!condition) {
       return evaluation.succeed();
@@ -91,11 +90,12 @@ export class ConditionEvaluator implements IConditionEvaluator {
                 });
               case InvalidConditionValueError.hasInstance(err):
                 return evaluation.error(ConditionEvaluationErrorCode.INVALID_CONDITION_VALUE, {
-                  value: environmentValue,
+                  value: err.getValue(),
                   operator: operator as ConditionOperator,
                   modifier: modifier as ConditionModifier,
                   attribute: attributePath
                 });
+              /* istanbul ignore next */
               default:
                 throw err;
             }

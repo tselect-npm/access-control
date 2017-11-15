@@ -1,10 +1,8 @@
 import { ConditionEvaluationErrorCode } from '../constants/condition-evaluation-error-code';
 import {
   TConditionEvaluationErrorDetails} from '../types/condition-evaluation-error-details';
-import { TPermissionCondition } from '../types/permission-condition';
 import { ConditionEvaluationResultCode } from '../constants/condition-evaluation-result-code';
 import { IConditionEvaluation } from '../interfaces/condition-evaluation';
-import { TConditionEvaluationConstructorOptions } from '../types/condition-evaluation-constructor-options';
 import {
   TConditionEvaluationInvalidConditionValueErrorDetails,
   TConditionEvaluationInvalidEnvironmentValueErrorDetails,
@@ -17,10 +15,8 @@ export class ConditionEvaluation implements IConditionEvaluation {
   private resultCode: ConditionEvaluationResultCode;
   private errorCode: ConditionEvaluationErrorCode | null;
   private errorDetails: TConditionEvaluationErrorDetails | null;
-  private condition: TPermissionCondition;
 
-  public constructor(options: TConditionEvaluationConstructorOptions) {
-    this.condition = options.condition || {};
+  public constructor() {
     this.resultCode = ConditionEvaluationResultCode.UNKNOWN;
     this.errorCode = null;
     this.errorDetails = null;
@@ -49,6 +45,8 @@ export class ConditionEvaluation implements IConditionEvaluation {
 
   public succeed() {
     this.resultCode = ConditionEvaluationResultCode.SUCCESS;
+    this.errorCode = null;
+    this.errorDetails = null;
     return this;
   }
 
@@ -64,13 +62,24 @@ export class ConditionEvaluation implements IConditionEvaluation {
     return this;
   }
 
+  public getResultCode(): ConditionEvaluationResultCode {
+    return this.resultCode;
+  }
+
+  public getErrorCode(): ConditionEvaluationErrorCode | null {
+    return this.errorCode;
+  }
+
+  public getErrorDetails(): TConditionEvaluationErrorDetails | null {
+    return this.errorDetails;
+  }
+
   public toJSON(): TConditionEvaluationJSON {
     return {
       succeeded: this.succeeded(),
       resultCode: this.resultCode,
       errorCode: this.errorCode,
-      errorDetails: this.errorDetails,
-      condition: this.condition
+      errorDetails: this.errorDetails
     }
   }
 }
