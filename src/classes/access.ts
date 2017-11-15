@@ -29,11 +29,6 @@ export class Access implements IAccess {
     return this.decisionCode !== DecisionCode.NOT_EVALUATED;
   }
 
-  public setDecisivePermission(permission: TPermission): this {
-    this.decisivePermission = permission;
-    return this;
-  }
-
   public getDecisivePermission(): TPermission | null {
     return this.decisivePermission;
   }

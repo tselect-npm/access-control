@@ -1,0 +1,91 @@
+import { Access } from '../../';
+import { TPermission } from '../../src/types/permission';
+import { PermissionEffect } from '../../src/constants/permission-effect';
+import { DecisionCode } from '../../src/constants/decision-code';
+import { TAccessJournalEntry } from '../../src/types/access-journal';
+import { ConditionEvaluationResultCode } from '../../src/constants/condition-evaluation-result-code';
+
+describe('Access', () => {
+  describe('#getConsideredPermissions()', () => {
+    it('should return considered permissions', () => {
+      const permission: TPermission = { id: 'perm', effect: PermissionEffect.DENY, resource: '*', action: '*' };
+      const access = new Access({ consideredPermissions: [permission], environment: {} });
+      expect(access.getConsideredPermissions()).to.deep.equal([permission]);
+    });
+  });
+  describe('#getEnvironment()', () => {
+    it('should return the environment', () => {
+      const access = new Access({ consideredPermissions: [], environment: {} });
+      expect(access.getEnvironment()).to.deep.equal({});
+    });
+  });
+  describe('#allow()', () => {
+    it('should allow access', () => {
+      const permission: TPermission = { id: 'perm', effect: PermissionEffect.ALLOW, resource: '*', action: '*' };
+      const access = new Access({ consideredPermissions: [permission], environment: {} });
+      access.allow(permission);
+      expect(access.isAllowed()).to.equal(true);
+      expect(access.isDenied()).to.equal(false);
+      expect(access.isEvaluated()).to.equal(true);
+      expect(access.getDecisionCode()).to.equal(DecisionCode.EXPLICITLY_ALLOWED);
+      expect(access.getDecisivePermission()).to.equal(permission);
+    });
+  });
+  describe('#deny()', () => {
+    it('should deny access', () => {
+      const permission: TPermission = { id: 'perm', effect: PermissionEffect.DENY, resource: '*', action: '*' };
+      const access = new Access({ consideredPermissions: [permission], environment: {} });
+      access.deny(DecisionCode.EXPLICITLY_DENIED, permission);
+      expect(access.isAllowed()).to.equal(false);
+      expect(access.isDenied()).to.equal(true);
+      expect(access.isEvaluated()).to.equal(true);
+      expect(access.getDecisionCode()).to.equal(DecisionCode.EXPLICITLY_DENIED);
+      expect(access.getDecisivePermission()).to.equal(permission);
+    });
+    it('should reset decisive permission', () => {
+      const permission: TPermission = { id: 'perm', effect: PermissionEffect.DENY, resource: '*', action: '*' };
+      const access = new Access({ consideredPermissions: [permission], environment: {} });
+      access.deny(DecisionCode.EXPLICITLY_DENIED, permission);
+      access.deny(DecisionCode.NO_EXPLICIT_ALLOW_PERMISSION_FOUND);
+      expect(access.getDecisivePermission()).to.equal(null);
+    });
+  });
+  describe('#logJournalEntry()', () => {
+    it('should add an entry to the journal', () => {
+      const permission: TPermission = { id: 'perm', effect: PermissionEffect.DENY, resource: '*', action: '*' };
+      const access = new Access({ consideredPermissions: [permission], environment: {} });
+      const entry: TAccessJournalEntry = {
+        permissionId: permission.id,
+        conditionEvaluation: {
+          succeeded: true,
+          resultCode: ConditionEvaluationResultCode.SUCCESS,
+          errorDetails: null,
+          errorCode: null
+        }
+      };
+      access.logJournalEntry(entry);
+      expect(access.getJournal()).to.be.an('array').and.have.lengthOf(1);
+      expect(access.getJournal()[0]).to.equal(entry);
+    });
+  });
+  describe('#toJSON()', () => {
+    it('should return a JSON representation', () => {
+      const permission: TPermission = { id: 'perm', effect: PermissionEffect.DENY, resource: '*', action: '*' };
+      const access = new Access({ consideredPermissions: [permission], environment: {} });
+      const entry: TAccessJournalEntry = {
+        permissionId: permission.id,
+        conditionEvaluation: {
+          succeeded: true,
+          resultCode: ConditionEvaluationResultCode.SUCCESS,
+          errorDetails: null,
+          errorCode: null
+        }
+      };
+      access.logJournalEntry(entry);
+      const json = access.toJSON();
+      expect(json).to.have.keys(['allowed', 'decisionCode', 'decisivePermission', 'environment', 'consideredPermissions', 'journal']);
+      expect(json.journal).to.be.an('array').and.have.lengthOf(1);
+      expect(json.consideredPermissions).to.be.an('array').and.have.lengthOf(1);
+    });
+  });
+});

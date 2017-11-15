@@ -10,7 +10,6 @@ export interface IAccess {
   allow(decisivePermission: TPermission): this;
   deny(code: DecisionCode, decisivePermission?: TPermission): this;
   getEnvironment(): TEnvironment | null | undefined;
-  setDecisivePermission(permission: TPermission): this;
   getDecisivePermission(): TPermission | null;
   getDecisionCode(): DecisionCode;
   isEvaluated(): boolean;
