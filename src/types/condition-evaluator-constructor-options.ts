@@ -1,9 +1,9 @@
-import { IConditionOperatorsHandlerManager } from '../interfaces/condition-operator-handlers-manager';
-import { IConditionModifierHandlerManager } from '../interfaces/condition-modifier-handlers-manager';
+import { IConditionOperatorsManager } from '../interfaces/condition-operators-manager';
+import { IConditionModifiersManager } from '../interfaces/condition-modifiers-manager';
 import { TConditionEvaluationFactory } from './condition-evaluation-factory';
 
 export type TConditionEvaluatorConstructorOptions = {
-  conditionOperatorsHandlerManager?: IConditionOperatorsHandlerManager;
-  conditionModifierHandlerManager?: IConditionModifierHandlerManager;
+  conditionOperatorsHandlerManager?: IConditionOperatorsManager;
+  conditionModifierHandlerManager?: IConditionModifiersManager;
   conditionEvaluationFactory?: TConditionEvaluationFactory;
 };

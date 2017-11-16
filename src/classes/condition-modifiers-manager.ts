@@ -1,9 +1,9 @@
-import { IConditionModifierHandlerManager } from '../interfaces/condition-modifier-handlers-manager';
+import { IConditionModifiersManager } from '../interfaces/condition-modifiers-manager';
 import { TConditionOperatorHandler } from '../types/condition-operator-handler';
 import { TComparisonValue } from '../types/comparison-value';
 import * as Lodash from 'lodash';
 
-export class ConditionModifierHandlersManager implements IConditionModifierHandlerManager {
+export class ConditionModifiersManager implements IConditionModifiersManager {
   public forAllValues(handler: TConditionOperatorHandler, conditionValues: TComparisonValue[], environmentValue: any): boolean {
     for (const value of conditionValues) {
       if (!handler(value, environmentValue)) {

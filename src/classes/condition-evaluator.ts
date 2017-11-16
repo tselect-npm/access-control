@@ -5,10 +5,10 @@ import { TConditionEvaluatorConstructorOptions } from '../types/condition-evalua
 import { TConditionOperatorHandler } from '../types/condition-operator-handler';
 import { TEnvironment } from '../types/environment';
 import { TPermissionCondition } from '../types/permission-condition';
-import { ConditionOperatorHandlersManager } from './condition-operator-handlers-manager';
-import { IConditionOperatorsHandlerManager } from '../interfaces/condition-operator-handlers-manager';
-import { ConditionModifierHandlersManager } from './condition-modifier-handlers-manager';
-import { IConditionModifierHandlerManager } from '../interfaces/condition-modifier-handlers-manager';
+import { ConditionOperatorsManager } from './condition-operators-manager';
+import { IConditionOperatorsManager } from '../interfaces/condition-operators-manager';
+import { ConditionModifiersManager } from './condition-modifiers-manager';
+import { IConditionModifiersManager } from '../interfaces/condition-modifiers-manager';
 import { TConditionModifierHandler } from '../types/condition-modifier-handler';
 import { InvalidEnvironmentValueError } from './errors/invalid-enviroment-value';
 import { InvalidConditionValueError } from './errors/invalid-condition-value';
@@ -19,13 +19,13 @@ import { ConditionModifier } from '../constants/condition-modifier';
 import { TConditionEvaluationFactory } from '../types/condition-evaluation-factory';
 import { IConditionEvaluation } from '../interfaces/condition-evaluation';
 
-const defaultConditionOperatorsHandlerManager = new ConditionOperatorHandlersManager();
-const defaultConditionModifierHandlerManager = new ConditionModifierHandlersManager();
+const defaultConditionOperatorsHandlerManager = new ConditionOperatorsManager();
+const defaultConditionModifierHandlerManager = new ConditionModifiersManager();
 const defaultConditionEvaluationFactory = () => new ConditionEvaluation();
 
 export class ConditionEvaluator implements IConditionEvaluator {
-  private conditionOperatorsHandlerManager: IConditionOperatorsHandlerManager;
-  private conditionModifierHandlerManager: IConditionModifierHandlerManager;
+  private conditionOperatorsHandlerManager: IConditionOperatorsManager;
+  private conditionModifierHandlerManager: IConditionModifiersManager;
   private conditionEvaluationFactory: TConditionEvaluationFactory;
 
   public constructor(options: TConditionEvaluatorConstructorOptions = {}) {

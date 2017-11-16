@@ -5,6 +5,6 @@ type TConditionModifierHandlerManager = {
   [modifier in ConditionModifier]: TConditionModifierHandler;
 };
 
-export interface IConditionModifierHandlerManager extends TConditionModifierHandlerManager {
+export interface IConditionModifiersManager extends TConditionModifierHandlerManager {
 
 }

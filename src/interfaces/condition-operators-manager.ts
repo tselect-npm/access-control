@@ -5,6 +5,6 @@ type TConditionOperatorsHandlerManager = {
   [operator in ConditionOperator]: TConditionOperatorHandler;
 }
 
-export interface IConditionOperatorsHandlerManager extends TConditionOperatorsHandlerManager {
+export interface IConditionOperatorsManager extends TConditionOperatorsHandlerManager {
 
 }

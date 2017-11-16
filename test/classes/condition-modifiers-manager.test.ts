@@ -1,7 +1,7 @@
-import { ConditionModifierHandlersManager } from '../../';
+import { ConditionModifiersManager } from '../../';
 
-describe('ConditionModifierHandlersManager', () => {
-  const handlersManager = new ConditionModifierHandlersManager();
+describe('ConditionModifiersManager', () => {
+  const handlersManager = new ConditionModifiersManager();
 
   describe('#exactValue()', () => {
     it('should return true', () => {

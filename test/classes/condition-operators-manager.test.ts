@@ -1,9 +1,9 @@
-import { ConditionOperatorHandlersManager } from '../../';
+import { ConditionOperatorsManager } from '../../';
 import { InvalidConditionValueError } from '../../src/classes/errors/invalid-condition-value';
 import { InvalidEnvironmentValueError } from '../../src/classes/errors/invalid-enviroment-value';
 
-describe('ConditionOperatorHandlersManager', () => {
-  const handlersManager = new ConditionOperatorHandlersManager();
+describe('ConditionOperatorsManager', () => {
+  const handlersManager = new ConditionOperatorsManager();
 
   describe('#stringEquals()', () => {
     it('should throw if env value is not a string', () => {
