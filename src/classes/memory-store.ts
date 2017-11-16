@@ -1,126 +1,153 @@
-import { Store } from './store';
 import { ISubject } from '../interfaces/subject';
 import { TSubjectPrincipal } from '../types/subject-principal';
 import { TPermissionId } from '../types/permission-id';
-import { TSubjectOrPrincipal } from '../types/subject-or-principal';
-import { toSubjectPrincipal } from '../utils/to-subject-principal';
 import { TRole } from '../types/role';
+import { TPermission } from '../types/permission';
+import { TCreatePermission } from '../types/create-permission';
+import * as UUID from 'uuid';
+import { toSubjectPrincipal } from '../utils/to-subject-principal';
+import { Subject } from './subject';
+import { TSubjectOrPrincipal } from '../types/subject-or-principal';
 import { TPermissionOrId } from '../types/permission-or-id';
 import { toPermissionId } from '../types/to-permission-id';
+import * as Lodash from 'lodash';
 import { IStore } from '../interfaces/store';
-import { TPermission } from '../types/permission';
 
-
-export class MemoryStore extends Store implements IStore {
+export class MemoryStore implements IStore {
   private permissions: Map<TPermissionId, TPermission>;
   private subjects: Map<TSubjectPrincipal, ISubject<any>>;
   private subjectRoles: Map<TSubjectPrincipal, Set<TRole>>;
   private rolePermissions: Map<TRole, Set<TPermissionId>>;
 
   public constructor() {
-    super();
     this.subjects = new Map();
     this.permissions = new Map();
+    this.subjectRoles = new Map();
+    this.rolePermissions = new Map();
   }
 
-  public async findRolesForSubject(subjectOrPrincipal: TSubjectOrPrincipal): Promise<TRole[]> {
-    const principal = toSubjectPrincipal(subjectOrPrincipal);
-    await this.assertIsRegisteredSubject(principal);
-    return Array.from(this.subjectRoles.get(principal) || []);
+  public createPermission(permission: TCreatePermission): TPermission {
+    if (!permission.id) {
+      permission.id = UUID.v4();
+    }
+    this.permissions.set(permission.id, permission as TPermission);
+    return permission as TPermission;
   }
 
-  public async findPermissionsForRole(role: TRole): Promise<TPermission[]> {
-    return Array.from(this.rolePermissions.get(role) || []).map(id => {
-      return this.permissions.get(id) as TPermission;
-    });
-  }
-
-  public async createPermission(permission: TPermission): Promise<TPermission> {
-    this.permissions.set(permission.id, permission);
-    return permission;
-  }
-
-  public async upsertPermission(permission: TPermission): Promise<void> {
-    this.permissions.set(permission.id, permission);
-  }
-
-  public async deletePermission(permissionOrId: TPermissionOrId): Promise<void> {
+  public deletePermission(permissionOrId: TPermissionOrId): this {
     const id = toPermissionId(permissionOrId);
     this.permissions.delete(id);
     for (const set of this.rolePermissions.values()) {
       set.delete(id);
     }
+    return this;
   }
 
-  public async addPermissionToRole(role: string, permissionOrId: TPermissionOrId): Promise<void> {
+  public replacePermission(permission: TPermission): this {
+    this.permissions.set(permission.id, permission);
+    return this;
+  }
+
+  public addPermissionToRole(role: TRole, permissionOrId: TPermissionOrId): this {
     const id = toPermissionId(permissionOrId);
-    await this.assertIsRegisteredPermission(id);
-    if (this.rolePermissions.has(role)) {
+    if (!this.permissions.has(id)) {
+      if (Lodash.isPlainObject(permissionOrId)) {
+        this.createPermission(permissionOrId as TPermission);
+      } else {
+        throw new Error(`Not an existing permission: ${id}.`);
+      }
+    }
+    if (this.rolePermissions.get(role)) {
       (<Set<TPermissionId>>this.rolePermissions.get(role)).add(id);
     } else {
       this.rolePermissions.set(role, new Set([id]));
     }
+    return this;
   }
 
-  public async removePermissionFromRole(role: TRole, permissionOrId: TPermissionOrId): Promise<void> {
+  public addPermissionsToRole(role: TRole, permissions: TPermissionOrId[]): this {
+    permissions.forEach(permission => this.addPermissionToRole(role, permission));
+    return this;
+  }
+
+  public removePermissionFromRole(role: string, permissionOrId: TPermissionOrId): this {
     const id = toPermissionId(permissionOrId);
-    await this.assertIsRegisteredPermission(id);
     if (this.rolePermissions.has(role)) {
       (<Set<TPermissionId>>this.rolePermissions.get(role)).delete(id);
     }
+    return this;
   }
 
-  public async registerSubject(subject: ISubject<any>): Promise<void> {
-    this.subjects.set(subject.getPrincipal(), subject);
-  }
-
-  public async deleteSubject(subjectOrPrincipal: TSubjectOrPrincipal): Promise<void> {
+  public addRoleToSubject(subjectOrPrincipal: TSubjectOrPrincipal, role: string): this {
     const principal = toSubjectPrincipal(subjectOrPrincipal);
-    this.subjects.delete(principal);
-    this.subjectRoles.delete(principal);
-  }
-
-  public async addRoleToSubject(subjectOrPrincipal: TSubjectOrPrincipal, role: TRole): Promise<void> {
-    const principal = toSubjectPrincipal(subjectOrPrincipal);
-    await this.assertIsRegisteredSubject(principal);
+    if (!this.subjects.has(principal)) {
+      if (subjectOrPrincipal instanceof Subject) {
+        this.createSubject(subjectOrPrincipal);
+      } else {
+        throw new Error(`Not an existing subject: ${principal}`);
+      }
+    }
     if (this.subjectRoles.has(principal)) {
       (<Set<TRole>>this.subjectRoles.get(principal)).add(role);
     } else {
       this.subjectRoles.set(principal, new Set([role]));
     }
+    return this;
   }
 
-  public async removeRoleFromSubject(subjectOrPrincipal: TSubjectOrPrincipal, role: TRole): Promise<void> {
+  public removeRoleFromSubject(subjectOrPrincipal: TSubjectOrPrincipal, role: string): this {
     const principal = toSubjectPrincipal(subjectOrPrincipal);
-    await this.assertIsRegisteredSubject(principal);
     if (this.subjectRoles.has(principal)) {
       (<Set<TRole>>this.subjectRoles.get(principal)).delete(role);
     }
+    return this;
   }
 
-  public async isRegisteredSubject(subjectOrPrincipal: TSubjectOrPrincipal): Promise<boolean> {
+  public getRolesForSubject(subjectOrPrincipal: TSubjectOrPrincipal): string[] {
+    return Array.from(this.subjectRoles.get(toSubjectPrincipal(subjectOrPrincipal)) || []);
+  }
+
+  public getPermissionsForRole(role: string): TPermission[] {
+    return (Array.from(this.rolePermissions.get(role) || [])).map(id => {
+      return this.permissions.get(id) as TPermission;
+    });
+  }
+
+  public getPermissionsForSubject(subject: ISubject<{}>): TPermission[] {
+    const roles = this.getRolesForSubject(subject);
+    return this.getPermissionsForRoles(roles);
+  }
+
+  public createSubject(subject: ISubject<{}>): this {
+    this.subjects.set(subject.getPrincipal(), subject);
+    return this;
+  }
+
+  public deleteSubject(subjectOrPrincipal: TSubjectOrPrincipal): this {
     const principal = toSubjectPrincipal(subjectOrPrincipal);
-    return this.subjects.has(principal);
+    this.subjects.delete(principal);
+    return this;
   }
 
-  public async assertIsRegisteredSubject(subjectOrPrincipal: TSubjectOrPrincipal): Promise<void> {
-    const principal = toSubjectPrincipal(subjectOrPrincipal);
-    const isRegistered = await this.isRegisteredSubject(principal);
-    if (!isRegistered) {
-      throw new Error(`Not a registered subject: ${principal}`);
-    }
+  public getPermissionsForRoles(roles: string[]): TPermission[] {
+    return roles.reduce((acc, role) => {
+      return acc.concat(this.getPermissionsForRole(role));
+    }, [] as TPermission[]);
   }
 
-  public async isRegisteredPermission(permissionOrId: TPermissionOrId): Promise<boolean> {
-    const id = toPermissionId(permissionOrId);
-    return this.permissions.has(id);
+  public getPermissions(): TPermission[] {
+    return Array.from(this.permissions.values());
   }
 
-  public async assertIsRegisteredPermission(permissionOrId: TPermissionOrId): Promise<void> {
-    const id = toPermissionId(permissionOrId);
-    const isRegistered = await this.isRegisteredPermission(id);
-    if (!isRegistered) {
-      throw new Error(`Not a registered permission: ${id}`);
-    }
+  public getPermissionById(id: TPermissionId): TPermission | undefined {
+    return this.permissions.get(id);
+  }
+
+  public getSubjects(): ISubject<{}>[] {
+    return Array.from(this.subjects.values());
+  }
+
+  public getSubjectByPrincipal(subjectPrincipal: TSubjectPrincipal): ISubject<{}> | undefined {
+    return this.subjects.get(subjectPrincipal);
   }
 }

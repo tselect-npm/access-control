@@ -7,5 +7,4 @@ import { TAttributeName } from '../types/attribute-name';
 export interface IAccessControlManager {
   authorize(subject: ISubject<any>, resource: TResource, action: TAction): Promise<IAccess>;
   filterAttributes<T extends {}>(payload: T, allowedAttributes: TAttributeName[]): Partial<T>;
-  filterListAttributes<T extends {}>(list: T[], allowAttributes: TAttributeName[]): (Partial<T>)[];
 }

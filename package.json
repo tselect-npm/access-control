@@ -27,10 +27,12 @@
     "@types/lodash": "^4.14.84",
     "@types/moment": "^2.13.0",
     "@types/stringify-object": "^3.1.1",
+    "@types/uuid": "^3.4.3",
     "filter-object": "^3.0.0",
     "lodash": "^4.17.4",
     "moment": "^2.19.2",
     "stringify-object": "^3.2.1",
-    "typescript": "^2.4.2"
+    "typescript": "^2.4.2",
+    "uuid": "^3.1.0"
   }
 }
