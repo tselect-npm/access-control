@@ -1,12 +1,39 @@
-import { IAttributesUtil } from '../interfaces/attributes-util';
 import { makeArray } from '@bluejay/utils';
 import * as Lodash from 'lodash';
 import { UNWIND } from '../constants/unwind';
 import { BANG } from '../constants/bang';
 import { WILD_CARD } from '../constants/wild-card';
 
-export class AttributesUtil implements IAttributesUtil {
-  public filter<T extends ({} | {}[])>(obj: T, matchingPatterns: string | string[]): Partial<T> {
+export abstract class Keys {
+  public static getValues<T = any>(data: {} | any[], path: string): T[] {
+    if (Array.isArray(data)) {
+      return Lodash.flattenDeep(data.map(element => this.getValues(element, path)));
+    }
+
+    const parts = path.split('.');
+    const leadingPart = parts[0];
+    const nextPart = parts[1];
+    const isNextUnwind = this.isUnwind(nextPart);
+    const isLast = isNextUnwind ? parts.length === 2 : parts.length === 1;
+
+    if (isLast) {
+      return Lodash.flattenDeep([data[leadingPart]]);
+    }
+
+    if (isNextUnwind) {
+      if (Array.isArray(data[leadingPart])) {
+        return Lodash.flattenDeep(data[leadingPart].map((element: any) => {
+          return this.getValues(element, parts.slice(2).join('.'));
+        }));
+      } else {
+        return [undefined] as any;
+      }
+    } else {
+      return this.getValues(data[leadingPart], parts.slice(1).join('.'));
+    }
+  }
+
+  public static filterAttributes<T extends ({} | {}[])>(data: T, matchingPatterns: string | string[]): Partial<T> {
     if (!matchingPatterns.length) {
       return {};
     }
@@ -29,16 +56,16 @@ export class AttributesUtil implements IAttributesUtil {
       }
     }
 
-    if (Array.isArray(obj)) {
-      return obj.map(element => this.filter(element, matchingPatterns)) as T;
+    if (Array.isArray(data)) {
+      return data.map(element => this.filterAttributes(element, matchingPatterns)) as T;
     }
 
-    if (!Lodash.isPlainObject(obj)) {
-      return obj;
+    if (!Lodash.isPlainObject(data)) {
+      return data;
     }
 
-    const result = Lodash.cloneDeep(obj);
-    const objKeys = this.list(obj);
+    const result = Lodash.cloneDeep(data);
+    const objKeys = this.list(data);
 
     for (const key of objKeys) {
       let shouldRemove = true;
@@ -60,7 +87,7 @@ export class AttributesUtil implements IAttributesUtil {
     return result;
   }
 
-  private remove(obj: {}, pattern: string) {
+  private static remove(obj: {}, pattern: string) {
     if (!pattern) {
       return obj;
     }
@@ -109,7 +136,7 @@ export class AttributesUtil implements IAttributesUtil {
     return obj;
   }
 
-  private list(obj: {}, prefix: string = ''): string[] {
+  private static list(obj: {}, prefix: string = ''): string[] {
     const result: string[] = [];
 
     for (const key of Object.getOwnPropertyNames(obj)) {
@@ -144,38 +171,38 @@ export class AttributesUtil implements IAttributesUtil {
     return result;
   }
 
-  private isNegated(pattern: string) {
+  private static isNegated(pattern: string) {
     return pattern.charAt(0) === BANG;
   }
 
-  private unNegate(pattern: string) {
+  private static unNegate(pattern: string) {
     if (this.isNegated(pattern)) {
       return pattern.slice(1);
     }
     return pattern;
   }
 
-  private isUnwind(pattern: string) {
+  private static isUnwind(pattern: string) {
     return pattern === UNWIND;
   }
 
-  private isWildCard(pattern: string) {
+  private static isWildCard(pattern: string) {
     return pattern === WILD_CARD;
   }
 
-  private escapeForRegExp(str: string): string {
+  private static escapeForRegExp(str: string): string {
     return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
   }
 
-  private implies(pattern: string, key: string) {
+  private static implies(pattern: string, key: string) {
     return this.isWildCard(pattern) || !!new RegExp('^' + this.escapeForRegExp(pattern)).exec(key);
   }
 
-  private toPath(parts: string[], prefix: string = '') {
+  private static toPath(parts: string[], prefix: string = '') {
     return this.prefix(parts.join('.'), prefix);
   }
 
-  private prefix(path: string, prefix: string) {
+  private static prefix(path: string, prefix: string) {
     return prefix ? prefix + '.' + path : path;
   }
 }

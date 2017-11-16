@@ -1,8 +1,6 @@
-import { AttributesUtil } from '../../';
+import { Keys } from '../../';
 
 describe('AttributesUtil', () => {
-  const util = new AttributesUtil();
-
   const payload = {
     id: 1,
     first_name: 'John',
@@ -36,25 +34,43 @@ describe('AttributesUtil', () => {
     }]
   };
 
-  describe('.filter()', () => {
+  describe('#getValue()', () => {
+    it('should retrieve first level value', () => {
+      expect(Keys.getValues(payload, 'last_name')).to.deep.equal(['Doe']);
+    });
+    it('should return nested value', () => {
+      expect(Keys.getValues(payload, 'preferences.email.news')).to.deep.equal([true]);
+    });
+    it('should return array values', () => {
+      expect(Keys.getValues(payload, 'posts.[].comments.[].content')).to.deep.equal(['Super cool', 'Ugh?', undefined, undefined]);
+    });
+    it('should return primitive array values', () => {
+      expect(Keys.getValues(payload, 'posts.[].tags.[]')).to.deep.equal([undefined, 'acl', 'abac']);
+    });
+    it('should retrieve values from an array', () => {
+      expect(Keys.getValues([payload.posts[0], payload.posts[1]], 'comments.[].content')).to.deep.equal(['Super cool', 'Ugh?', undefined, undefined]);
+    });
+  });
+
+  describe('#filterAttributes()', () => {
     it('should keep first level property', () => {
-      const filtered = util.filter(payload, 'first_name');
+      const filtered = Keys.filterAttributes(payload, 'first_name');
       expect(filtered).to.deep.equal({ first_name: 'John' });
     });
     it('should keep multiple first level property', () => {
-      const filtered = util.filter(payload, ['last_name', 'first_name']);
+      const filtered = Keys.filterAttributes(payload, ['last_name', 'first_name']);
       expect(filtered).to.deep.equal({ first_name: 'John', last_name: 'Doe' });
     });
     it('should keep nested property', () => {
-      const filtered = util.filter(payload, 'preferences.email.news');
+      const filtered = Keys.filterAttributes(payload, 'preferences.email.news');
       expect(filtered).to.deep.equal({ preferences: { email: { news: true } } });
     });
     it('should keep nested array property', () => {
-      const filtered = util.filter(payload, 'posts.[].title');
+      const filtered = Keys.filterAttributes(payload, 'posts.[].title');
       expect(filtered).to.deep.equal({ posts: [{ title: 'RBAC' }, { title: 'ABAC' }] });
     });
     it('should keep full array', () => {
-      const filtered = util.filter(payload, 'posts');
+      const filtered = Keys.filterAttributes(payload, 'posts');
       expect(filtered).to.deep.equal({
         posts: [{
           id: 1,
@@ -81,7 +97,7 @@ describe('AttributesUtil', () => {
       });
     });
     it('should keep all but negated', () => {
-      const filtered = util.filter(payload, ['!password', '!posts', '!preferences.email']);
+      const filtered = Keys.filterAttributes(payload, ['!password', '!posts', '!preferences.email']);
       expect(filtered).to.deep.equal({
         id: 1,
         first_name: 'John',
@@ -92,16 +108,16 @@ describe('AttributesUtil', () => {
       });
     });
     it('should keep nothing', () => {
-      const filtered = util.filter(payload, []);
+      const filtered = Keys.filterAttributes(payload, []);
       expect(filtered).to.deep.equal({});
     });
     it('should keep everything', () => {
-      const filtered = util.filter(payload, '*');
+      const filtered = Keys.filterAttributes(payload, '*');
       expect(filtered).to.deep.equal(payload);
     });
     it('should filter an array', () => {
       const data = [{ foo: 'foo', bar: 'bar' }, { foo: 'bar', bar: 'foo' }];
-      expect(util.filter(data, 'foo')).to.deep.equal([{ foo: 'foo' }, { foo: 'bar' }]);
+      expect(Keys.filterAttributes(data, 'foo')).to.deep.equal([{ foo: 'foo' }, { foo: 'bar' }]);
     });
   });
 });

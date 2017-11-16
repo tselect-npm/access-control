@@ -6,7 +6,6 @@ export { ConditionEvaluator } from './src/classes/condition-evaluator';
 export { ConditionEvaluation } from './src/classes/condition-evaluation';
 export { ConditionModifiersManager } from './src/classes/condition-modifiers-manager';
 export { ConditionOperatorsManager } from './src/classes/condition-operators-manager';
-export { AttributesUtil } from './src/classes/attributes-util';
 export { Subject } from './src/classes/subject';
 
 export { IAccessAuthorizer } from './src/interfaces/access-authorizer';
@@ -16,7 +15,6 @@ export { IConditionEvaluator } from './src/interfaces/condition-evaluator';
 export { IConditionEvaluation } from './src/interfaces/condition-evaluation';
 export { IConditionModifiersManager } from './src/interfaces/condition-modifiers-manager';
 export { IConditionOperatorsManager } from './src/interfaces/condition-operators-manager';
-export { IAttributesUtil } from './src/interfaces/attributes-util';
 export { ISubject } from './src/interfaces/subject';
 
 export { TAccessControlManagerConstructorOptions } from './src/types/access-control-manager-constructor-options';
@@ -41,3 +39,4 @@ export { isWildCard } from './src/utils/is-wild-card';
 export { blanksToWildCards } from './src/utils/blanks-to-wild-cards';
 export { isIfExistsModifier } from './src/utils/is-if-exists-modifier';
 export { toSubjectPrincipal } from './src/utils/to-subject-principal';
+export { Keys } from './src/utils/keys';

@@ -18,6 +18,7 @@ import { ConditionOperator } from '../constants/condition-operator';
 import { ConditionModifier } from '../constants/condition-modifier';
 import { TConditionEvaluationFactory } from '../types/condition-evaluation-factory';
 import { IConditionEvaluation } from '../interfaces/condition-evaluation';
+import { Keys } from '../utils/keys';
 
 const defaultConditionOperatorsHandlerManager = new ConditionOperatorsManager();
 const defaultConditionModifierHandlerManager = new ConditionModifiersManager();
@@ -68,42 +69,44 @@ export class ConditionEvaluator implements IConditionEvaluator {
         const attributePaths = Object.keys(modifierHash);
 
         for (const attributePath of attributePaths) {
-          const environmentValue: any = Lodash.get(environment, attributePath);
+          const environmentValues = Keys.getValues(environment, attributePath);
           const conditionValue = modifierHash[attributePath];
 
-          let matches: boolean;
+          for (const environmentValue of environmentValues) {
+            let matches: boolean;
 
-          try {
-            matches = modifierHandler.call(this.conditionModifierHandlerManager,
-              operatorHandler.bind(this.conditionOperatorsHandlerManager),
-              makeArray(conditionValue),
-              environmentValue
-            );
-          } catch (err) {
-            switch (true) {
-              case InvalidEnvironmentValueError.hasInstance(err):
-                return evaluation.error(ConditionEvaluationErrorCode.INVALID_ENVIRONMENT_VALUE, {
-                  value: environmentValue,
-                  operator: operator as ConditionOperator,
-                  modifier: modifier as ConditionModifier,
-                  attribute: attributePath
-                });
-              case InvalidConditionValueError.hasInstance(err):
-                return evaluation.error(ConditionEvaluationErrorCode.INVALID_CONDITION_VALUE, {
-                  value: err.getValue(),
-                  operator: operator as ConditionOperator,
-                  modifier: modifier as ConditionModifier,
-                  attribute: attributePath
-                });
-              /* istanbul ignore next */
-              default:
-                throw err;
+            try {
+              matches = modifierHandler.call(this.conditionModifierHandlerManager,
+                operatorHandler.bind(this.conditionOperatorsHandlerManager),
+                makeArray(conditionValue),
+                environmentValue
+              );
+            } catch (err) {
+              switch (true) {
+                case InvalidEnvironmentValueError.hasInstance(err):
+                  return evaluation.error(ConditionEvaluationErrorCode.INVALID_ENVIRONMENT_VALUE, {
+                    value: environmentValue,
+                    operator: operator as ConditionOperator,
+                    modifier: modifier as ConditionModifier,
+                    attribute: attributePath
+                  });
+                case InvalidConditionValueError.hasInstance(err):
+                  return evaluation.error(ConditionEvaluationErrorCode.INVALID_CONDITION_VALUE, {
+                    value: err.getValue(),
+                    operator: operator as ConditionOperator,
+                    modifier: modifier as ConditionModifier,
+                    attribute: attributePath
+                  });
+                /* istanbul ignore next */
+                default:
+                  throw err;
+              }
             }
-          }
 
-          // Return early if any handler failed.
-          if (!matches) {
-            return evaluation.fail();
+            // Return early if any handler failed.
+            if (!matches) {
+              return evaluation.fail();
+            }
           }
         }
       }
