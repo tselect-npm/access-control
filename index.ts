@@ -16,6 +16,7 @@ export { IConditionEvaluation } from './src/interfaces/condition-evaluation';
 export { IConditionModifiersManager } from './src/interfaces/condition-modifiers-manager';
 export { IConditionOperatorsManager } from './src/interfaces/condition-operators-manager';
 export { ISubject } from './src/interfaces/subject';
+export { IAccessControl } from './src/interfaces/access-control';
 
 export { TAccessControlManagerConstructorOptions } from './src/types/access-control-manager-constructor-options';
 export { TPermission } from './src/types/permission';
