@@ -54,23 +54,23 @@ describe('AttributesUtil', () => {
 
   describe('#filterAttributes()', () => {
     it('should keep first level property', () => {
-      const filtered = Keys.filterAttributes(payload, 'first_name');
+      const filtered = Keys.filter(payload, 'first_name');
       expect(filtered).to.deep.equal({ first_name: 'John' });
     });
     it('should keep multiple first level property', () => {
-      const filtered = Keys.filterAttributes(payload, ['last_name', 'first_name']);
+      const filtered = Keys.filter(payload, ['last_name', 'first_name']);
       expect(filtered).to.deep.equal({ first_name: 'John', last_name: 'Doe' });
     });
     it('should keep nested property', () => {
-      const filtered = Keys.filterAttributes(payload, 'preferences.email.news');
+      const filtered = Keys.filter(payload, 'preferences.email.news');
       expect(filtered).to.deep.equal({ preferences: { email: { news: true } } });
     });
     it('should keep nested array property', () => {
-      const filtered = Keys.filterAttributes(payload, 'posts.[].title');
+      const filtered = Keys.filter(payload, 'posts.[].title');
       expect(filtered).to.deep.equal({ posts: [{ title: 'RBAC' }, { title: 'ABAC' }] });
     });
     it('should keep full array', () => {
-      const filtered = Keys.filterAttributes(payload, 'posts');
+      const filtered = Keys.filter(payload, 'posts');
       expect(filtered).to.deep.equal({
         posts: [{
           id: 1,
@@ -97,7 +97,7 @@ describe('AttributesUtil', () => {
       });
     });
     it('should keep all but negated', () => {
-      const filtered = Keys.filterAttributes(payload, ['!password', '!posts', '!preferences.email']);
+      const filtered = Keys.filter(payload, ['!password', '!posts', '!preferences.email']);
       expect(filtered).to.deep.equal({
         id: 1,
         first_name: 'John',
@@ -108,16 +108,16 @@ describe('AttributesUtil', () => {
       });
     });
     it('should keep nothing', () => {
-      const filtered = Keys.filterAttributes(payload, []);
+      const filtered = Keys.filter(payload, []);
       expect(filtered).to.deep.equal({});
     });
     it('should keep everything', () => {
-      const filtered = Keys.filterAttributes(payload, '*');
+      const filtered = Keys.filter(payload, '*');
       expect(filtered).to.deep.equal(payload);
     });
     it('should filter an array', () => {
       const data = [{ foo: 'foo', bar: 'bar' }, { foo: 'bar', bar: 'foo' }];
-      expect(Keys.filterAttributes(data, 'foo')).to.deep.equal([{ foo: 'foo' }, { foo: 'bar' }]);
+      expect(Keys.filter(data, 'foo')).to.deep.equal([{ foo: 'foo' }, { foo: 'bar' }]);
     });
   });
 });

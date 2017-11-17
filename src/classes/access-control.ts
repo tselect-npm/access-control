@@ -1,6 +1,6 @@
 import { TAccessControlManagerConstructorOptions } from '../types/access-control-manager-constructor-options';
 import { AccessAuthorizer } from './access-authorizer';
-import { IAccessControlManager } from '../interfaces/access-control-manager';
+import { IAccessControl } from '../interfaces/access-control';
 import { IAccess } from '../interfaces/access';
 import { ISubject } from '../interfaces/subject';
 import { TResource } from '../types/resource';
@@ -10,7 +10,7 @@ import { TEnvironment } from '../types/environment';
 import { IStore } from '../interfaces/store';
 import { Keys } from '../utils/keys';
 
-export class AccessControlManager implements IAccessControlManager {
+export class AccessControl implements IAccessControl {
   private store: IStore;
   private authorizer: IAccessAuthorizer;
 
@@ -27,9 +27,5 @@ export class AccessControlManager implements IAccessControlManager {
   public async can(subject: ISubject<{}>, resource: TResource, action: TAction, environment?: TEnvironment): Promise<boolean> {
     const access = await this.authorize(subject, resource, action, environment);
     return access.isAllowed();
-  }
-
-  public filterAttributes<T extends ({} | {}[])>(payload: T, patterns: string | string[]): Partial<T> {
-    return Keys.filterAttributes(payload, patterns);
   }
 }

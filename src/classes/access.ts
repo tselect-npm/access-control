@@ -5,6 +5,8 @@ import { DecisionCode } from '../constants/decision-code';
 import { TAccessJSON } from '../types/access-json';
 import { TEnvironment } from '../types/environment';
 import { TAccessJournal, TAccessJournalEntry } from '../types/access-journal';
+import { TAttributeName } from '../types/attribute-name';
+import { TWildCard } from '../types/wild-card';
 
 export class Access implements IAccess {
   private journal: TAccessJournal;
@@ -31,6 +33,10 @@ export class Access implements IAccess {
 
   public getDecisivePermission(): TPermission | null {
     return this.decisivePermission;
+  }
+
+  public getReturnedAttributes(): TAttributeName[] | TWildCard | undefined {
+    return this.decisivePermission ? this.decisivePermission.returnedAttributes : undefined;
   }
 
   public getConsideredPermissions(): TPermission[] {

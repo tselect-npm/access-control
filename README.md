@@ -48,96 +48,113 @@ export class UserSubject extends Subject<{ id: number }> {
 }
 ```
 
-Now let's create an instance of Bluejay's AccessControl to be used across the application. For the sake of simplicity, we are going to let Bluejay use a `MemoryStore` which stores data in memory. We'll cover how to add persistent stores later in this documentation.
+We'll then need to tell Bluejay where to look for permissions. AccessControl comes package with a built-in `MemoryStore` that allows you to manage permissions in memory. We'll cover persistent stores later in this documentation.
+
+```typescript
+import { MemoryStore } from '@bluejay/access-control';
+
+const store = new MemoryStore();
+``` 
+
+Now let's create an instance of Bluejay's AccessControl to be used across the application.
 
 ```typescript
 import { AccessControlManager } from '@bluejay/access-control';
 
-const ac = new AccessControlManager();
+const accessControl = new AccessControlManager({ store });
 ```
 
 We're now ready to declare permissions:
 
 ```typescript
-// Limited power for customers
-await ac.addPermissionToRole(Role.CUSTOMER, {
-  id: 'CustomerPostsPolicy',
-  effect: 'allow',
-  resource: 'posts',
-  action: ['create', 'read']
-});
-
-// Full power for admins
-await ac.addPermissionToRole(Role.ADMIN, {
-  id: 'AdminPolicy',
-  effect: 'allow',
-  resource: '*',
-  action: '*'
-});
-
-
 const customer = new UserSubject({ id: 1 });
 const admin = new UserSubject({ id: 2 });
 
-await acl.addRoleToSubject(customer, Role.CUSTOMER);
-await acl.addRoleToSubject(admin, Role.ADMIN);
+store
+  .addPermissionToRole(Role.CUSTOMER, { // Limited power for customers
+    id: 'CustomerPostsPolicy',
+    effect: 'allow',
+    resource: 'posts',
+    action: ['create', 'read']
+  })
+  .addPermissionToRole(Role.ADMIN, { // Full power for admins
+    id: 'AdminPolicy',
+    effect: 'allow',
+    resource: '*',
+    action: '*'
+  })
+  .addRoleToSubject(customer, Role.CUSTOMER)
+  .addRoleToSubject(admin, Role.ADMIN);
 ```
 
 We can finally check our users permissions:
 
 ```typescript
-await ac.can(customer, 'posts', 'create'); // true
-await ac.can(customer, 'posts', 'update'); // false
-await ac.can(admin, 'posts', 'delete'); // true
+await accessControl.can(customer, 'posts', 'create'); // true
+await accessControl.can(customer, 'posts', 'update'); // false
+await accessControl.can(admin, 'posts', 'delete'); // true
 ```
 
 ### Simple attribute based access control
 
-ABAC (Attribute Based Access Control) provides an fine-grained control over which attributes a particular role is able to access. The following examples assume that you have already read the RBAC examples. Once again, we are going to use a `MemoryStore` for the sake of simplicity.
+ABAC (Attribute Based Access Control) provides an fine-grained control over which attributes a particular role is able to access. The following examples assume that you have already read the RBAC examples.
 
 Let's create some more specific permission:
 
 ```typescript
-await ac.addPermissionToRole(Role.CUSTOMER, {
-  id: 'CustomerCreatePostPolicy',
-  effect: 'allow',
-  resource: 'posts',
-  action: 'create',
-  condition: {
-    hashAttributesEqual: {
-      body: ['title', 'content']
+store
+  .addPermissionToRole(Role.CUSTOMER, {
+    id: 'CustomerCreatePostPolicy',
+    effect: 'allow',
+    resource: 'posts',
+    action: 'create',
+    condition: {
+      stringEquals: {
+        forAllValues: {
+          bodyAttributes: ['title', 'content']
+        }
+      }
     }
-  }
-});
-
-await ac.addPermissionToRole(Role.ADMIN, {
-  id: 'AdminPolicy',
-  effect: 'allow',
-  resource: '*',
-  action: '*'
-});
+  })
+  .addPermissionToRole(Role.ADMIN, {
+    id: 'AdminPolicy',
+    effect: 'allow',
+    resource: '*',
+    action: '*'
+  });
 ```
 
-The `condition` part defines a set of rules used to evaluate whether or not the permission is applicable. Because we have specified `hashAttributesEqual`, we are taking a white list approach and the permission will only be applicable if both `title` and `content` - and no other attributes - are provided in the `body` hash of the `environment`. The `environment` is a hash that contains various values which are being used to evaluate the permission's condition. By saying that we expect the `title` and `content` attributes to exist, we are telling the authorizer to only use this permission if and only if those attributes are provided in `body`. That means that, if not both `title` and `content` are provided in the blog post creation payload, then the permission becomes inapplicable and is therefore ignored - in which case the access will be denied. In the same way, if the payload contains any other attribute that `title` and `content`, the permission will also become inapplicable and the access, denied.
+The `condition` part defines a set of rules used to evaluate whether or not the permission is applicable. Conditions are defined in 3 levels object that can be described as follows:
+- operator (`stringEquals` in our case)
+    - modifier (`forAllValues` in our case)
+        - attributeName (`bodyAttributes` in our case)
+        
+An `operator` defines what type of data we're comparing and how to compare then. Example operators are `dateEquals`, `numberGreaterThan`, `bool`, `stringNotEquals`, ...
+A `modifier` defines the type of input data (single value vs. array) as well as how to interpret them. Example modifiers are `forAllValues`, `simpleValue`, `simpleValueIfExists`
+An `attributeName` defines an attribute that is expected to be present in the `environment`. Our example defines `bodyAttributes` which is meant to contain the attributes of the POST request's body.
+
+We are essentially saying that *for all values* in `bodyAttributes`, we expect to find an *equal string* in the provided condition values. Stated another way, we expect the body to only contain attributes that are listed in the condition values.
 
 We'll be building a simple express POST endpoint that allows consumers to create blog posts. We'll assume that the request has been authenticated and the current user stored as `req.user`. We'll also assume that the request's body has already been validated and contains only valid values in regards to the data model.
 
+We will be making use of Bluejay's `Keys` utility, which helps performing various attribute related operations on objects and arrays, in a format that is understood by Bluejay.
+
 ```typescript
+import { Keys } from '@bluejay/access-control';
+
 app.post('/posts', authenticate(), validatePostBody(), async (req: Request, res: Response) => {
   const body: Partial<IPost> = req.body;
   
   const subject = new UserSubject(req.user);
   
-  // We're passing the body's attributes in the environment in order to let 
-  const isAllowed = await ac.can(subject, 'posts', 'create', { body });
+  // We're passing the body's attributes in the environment. Keys.list() will make sure that the resulting list of attributes
+  // is understandable by Bluejay.
+  const isAllowed = await accessControl.can(subject, 'posts', 'create', { bodyAttributes: Keys.list(body) });
   
   // For an admin user, since no attributes condition has been defined in the permission, any body will be authorized.
-  // For a customer user, the access will only be authorized if both `title` and `content` - and no other attributes - are present. 
+  // For a customer user, the access will only be authorized if all attributes in the body are listed in the permission. 
   
   if (isAllowed) {
-    if (!body.created_by) { 
-      body.created_by = req.user.id;
-    }
     await postService.create(body);
     res.status(201).end();
   } else {
@@ -150,7 +167,7 @@ app.post('/posts', authenticate(), validatePostBody(), async (req: Request, res:
 
 It is important to understand that access control validates a request and has therefore no influence over the response that you send to your consumers.
 
-If you need to control which fields are exposed in the responses to your different consumers, one solution is to have them explicitly request the set of attributes that they want to see returned. If this is how your application behaves, then you can validate the attributes set that a particular user is requesting using a permission that could look like this:
+If you need to control which fields are exposed in the responses to your different consumers, one solution is to have them explicitly request the set of attributes that they want to see returned. If this is how your application behaves, then you can validate the attributes that a particular user is requesting using a permission that would look like this:
 
 ```typescript
 ac.addPermissionToRole(Role.CUSTOMER, {
@@ -159,14 +176,16 @@ ac.addPermissionToRole(Role.CUSTOMER, {
   resource: 'posts',
   action: 'read',
   condition: {
-    stringArrayMembersIncludeAtLeastOne: {
-      fields: ['id', 'title', 'content', 'created_by']
+    stringEquals: {
+      forAllValues: {
+        fields: ['id', 'title', 'content', 'created_by'] 
+      }
     }
   }
 });
 ```
 
-`stringArrayMembersIncludeAtLeastOne` tells the authorizer that the `fields` array shall only include the listed members. It also makes the `fields` array a required environment variable and ensures that it contains at least one member. If those conditions are not met, or if the fields contain any unknown attribute, the permission's condition will evaluate to `false` and the access will be denied.  
+In this condition, we are essentially saying that *for all values* in `fields`, we expect to find an *equal string* in the permission's values.  
 
 ```typescript
 // We'll assume that the consumers make calls that look like "GET /posts?fields=id,title,content" where the `fields` query parameter defines the fields to be returned as a response.
@@ -176,10 +195,10 @@ app.get('/posts', authenticate(), async (req: Request, res: Response) => {
   const subject = new UserSubject(req.user);
   
   // We're passing the fields in the environment hash so that they can be evaluated
-  const access = await ac.authorize(subject, 'posts', 'read', { fields });
+  const access = await accessControl.authorize(subject, 'posts', 'read', { fields });
   
   if (access.isAllowed()) {
-    // The application is responsible for only returning the fields that have been requested. the access control has made sure that only allowed attributes have been requested, so you can safely pass the it to your service.
+    // The application is responsible for only returning the fields that have been requested. The access control has made sure that only allowed attributes have been requested, so you can safely pass the fields to your service.
     const data = await postService.list({ fields });
     res.status(200).json(data);
   } else {
@@ -204,12 +223,12 @@ ac.addPermissionToRole(Role.CUSTOMER, {
 app.get('/posts', authenticate(), async (req: Request, res: Response) => {
   const subject = new UserSubject(req.user);
   
-  // We're not passing any environment data here since the request does not contain any attribute information that could be useful to determine access. the `returnedAttributes` are simply ignored by the authorizer.
-  const access = await ac.authorize(subject, 'posts', 'read');
+  // We're not passing any environment data here since the request does not contain any attribute information that could be useful to determine access. the `returnedAttributes` are simply ignored by Bluejay.
+  const access = await accessControl.authorize(subject, 'posts', 'read');
   
   if (access.isAllowed()) {
     // This time, instead of using the request's `fields`, we're using the fields defined in the permission and accessible through `getReturnedAttributes()` on the access. 
-    const data = await postService.list({ fields: access.getReturnedAttributes() });
+    const data = await postService.list({ fields: access.getReturnedAttributes() || [] }); // Depending on who's calling, the returned attributes might be undefined
     res.status(200).json(data);
   } else {
     res.status(403).end();
@@ -217,20 +236,26 @@ app.get('/posts', authenticate(), async (req: Request, res: Response) => {
 });
 ```
 
-It is important to note that Bluejay only acts as a store here and never uses `returnedAttributes` to determine access.
+It is important to note that Bluejay only acts as a middleman here and never uses `returnedAttributes` to determine access.
 
-Also alternatively, if you are not able to have your services only return a specific set of attributes, you can use Bluejay's `filterListAttributes()` or `filterAttributes` utility to filter the payload before responding:
+Also alternatively, if you are not able to have your services only return a specific set of attributes, you can use Bluejay's `Keys` utility to filter the payload before responding:
 
 ```typescript
+import { Keys } from '@bluejay/access-control';
+
 app.get('/posts', authenticate(), async (req: Request, res: Response) => {
   const subject = new UserSubject(req.user);
   
   // We're not passing any environment data here since the request does not contain any attribute information that could be useful to determine access. the `returnedAttributes` are simply ignored by the authorizer.
-  const access = await ac.authorize(subject, 'posts', 'read');
+  const access = await accessControl.authorize(subject, 'posts', 'read');
   
   if (access.isAllowed()) {
     const data = await postService.list({ fields: access.getReturnedAttributes() });
-    res.status(200).json(ac.filterListAttributes(data, access.getReturnedAttributes()));
+    
+    // Keys.filter() accepts both objects and arrays
+    const payload = Keys.filter(data, access.getReturnedAttributes())
+    
+    res.status(200).json(payload);
   } else {
     res.status(403).end();
   }

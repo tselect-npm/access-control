@@ -153,7 +153,7 @@ describe('AccessAuthorizer', () => {
         action: 'create',
         condition: {
           numberGreaterThan: {
-            exactValue: {
+            simpleValue: {
               foo: '15'
             }
           }
@@ -175,7 +175,7 @@ describe('AccessAuthorizer', () => {
         action: 'create',
         condition: {
           numberGreaterThan: {
-            exactValue: {
+            simpleValue: {
               foo: '15'
             }
           }
@@ -197,7 +197,7 @@ describe('AccessAuthorizer', () => {
         action: 'create',
         condition: {
           numberGreaterThan: {
-            exactValue: {
+            simpleValue: {
               foo: '15'
             }
           }

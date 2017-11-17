@@ -33,7 +33,7 @@ export abstract class Keys {
     }
   }
 
-  public static filterAttributes<T extends ({} | {}[])>(data: T, matchingPatterns: string | string[]): Partial<T> {
+  public static filter<T extends ({} | {}[])>(data: T, matchingPatterns: string | string[]): Partial<T> {
     if (!matchingPatterns.length) {
       return {};
     }
@@ -57,7 +57,7 @@ export abstract class Keys {
     }
 
     if (Array.isArray(data)) {
-      return data.map(element => this.filterAttributes(element, matchingPatterns)) as T;
+      return data.map(element => this.filter(element, matchingPatterns)) as T;
     }
 
     if (!Lodash.isPlainObject(data)) {
@@ -84,6 +84,41 @@ export abstract class Keys {
       }
     }
 
+    return result;
+  }
+
+  public static list(obj: {}, prefix: string = ''): string[] {
+    const result: string[] = [];
+
+    for (const key of Object.getOwnPropertyNames(obj)) {
+      const objValue = obj[key];
+
+      if (Array.isArray(objValue)) {
+        if (Lodash.isPlainObject(obj[key][0])) {
+          const allKeys: Set<string> = obj[key].reduce((set: Set<string>, element: {}) => {
+            const elementKeys = this.list(element);
+            for (const elementKey of elementKeys) {
+              set.add(elementKey);
+            }
+            return set;
+          }, new Set());
+          for (const subKey of Array.from(allKeys)) {
+            result.push(this.toPath([key, UNWIND, subKey], prefix));
+          }
+        } else {
+          result.push(this.toPath([key, UNWIND], prefix));
+        }
+
+        continue;
+      }
+
+      if (Lodash.isPlainObject(objValue)) {
+        result.push(...this.list(obj[key], this.toPath([key], prefix)));
+        continue;
+      }
+
+      result.push(this.toPath([key], prefix));
+    }
     return result;
   }
 
@@ -134,41 +169,6 @@ export abstract class Keys {
     }
 
     return obj;
-  }
-
-  private static list(obj: {}, prefix: string = ''): string[] {
-    const result: string[] = [];
-
-    for (const key of Object.getOwnPropertyNames(obj)) {
-      const objValue = obj[key];
-
-      if (Array.isArray(objValue)) {
-        if (Lodash.isPlainObject(obj[key][0])) {
-          const allKeys: Set<string> = obj[key].reduce((set: Set<string>, element: {}) => {
-            const elementKeys = this.list(element);
-            for (const elementKey of elementKeys) {
-              set.add(elementKey);
-            }
-            return set;
-          }, new Set());
-          for (const subKey of Array.from(allKeys)) {
-            result.push(this.toPath([key, UNWIND, subKey], prefix));
-          }
-        } else {
-          result.push(this.toPath([key, UNWIND], prefix));
-        }
-
-        continue;
-      }
-
-      if (Lodash.isPlainObject(objValue)) {
-        result.push(...this.list(obj[key], this.toPath([key], prefix)));
-        continue;
-      }
-
-      result.push(this.toPath([key], prefix));
-    }
-    return result;
   }
 
   private static isNegated(pattern: string) {

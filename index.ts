@@ -1,4 +1,4 @@
-export { AccessControlManager } from './src/classes/access-control-manager';
+export { AccessControl } from './src/classes/access-control';
 export { AccessAuthorizer } from './src/classes/access-authorizer';
 export { Access } from './src/classes/access';
 export { MemoryStore } from './src/classes/memory-store';

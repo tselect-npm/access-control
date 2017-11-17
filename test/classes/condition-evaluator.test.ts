@@ -52,7 +52,7 @@ describe('ConditionEvaluator', () => {
     it('should return a positive evaluation if condition is met', () => {
       const evaluation = conditionEvaluator.evaluate({
         numberGreaterThan: {
-          exactValue: {
+          simpleValue: {
             foo: '13'
           }
         }
@@ -62,7 +62,7 @@ describe('ConditionEvaluator', () => {
     it('should return a positive evaluation if env is undefined but operator is optional', () => {
       const evaluation = conditionEvaluator.evaluate({
         numberGreaterThan: {
-          exactValueIfExists: {
+          simpleValueIfExists: {
             foo: '13'
           }
         }
@@ -72,7 +72,7 @@ describe('ConditionEvaluator', () => {
     it('should return a negative evaluation if condition is NOT met', () => {
       const evaluation = conditionEvaluator.evaluate({
         numberGreaterThan: {
-          exactValueIfExists: {
+          simpleValueIfExists: {
             foo: '13'
           }
         }
@@ -82,7 +82,7 @@ describe('ConditionEvaluator', () => {
     it('should return a negative evaluation if condition is NOT met', () => {
       const evaluation = conditionEvaluator.evaluate({
         numberGreaterThan: {
-          exactValueIfExists: {
+          simpleValueIfExists: {
             foo: '13'
           }
         }
@@ -95,7 +95,7 @@ describe('ConditionEvaluator', () => {
     it('should return a negative evaluation if env value is invalid', () => {
       const evaluation = conditionEvaluator.evaluate({
         numberGreaterThan: {
-          exactValueIfExists: {
+          simpleValueIfExists: {
             foo: '13'
           }
         }
@@ -103,12 +103,12 @@ describe('ConditionEvaluator', () => {
       expect(evaluation.succeeded()).to.equal(false);
       expect(evaluation.getResultCode()).to.equal(ConditionEvaluationResultCode.ERROR);
       expect(evaluation.getErrorCode()).to.equal(ConditionEvaluationErrorCode.INVALID_ENVIRONMENT_VALUE);
-      expect(evaluation.getErrorDetails()).to.deep.equal({ attribute: 'foo', operator: 'numberGreaterThan', modifier: 'exactValueIfExists', value: true });
+      expect(evaluation.getErrorDetails()).to.deep.equal({ attribute: 'foo', operator: 'numberGreaterThan', modifier: 'simpleValueIfExists', value: true });
     });
     it('should return a negative evaluation if condition value is invalid', () => {
       const evaluation = conditionEvaluator.evaluate({
         numberGreaterThan: {
-          exactValueIfExists: {
+          simpleValueIfExists: {
             foo: 'true'
           }
         }
@@ -116,7 +116,7 @@ describe('ConditionEvaluator', () => {
       expect(evaluation.succeeded()).to.equal(false);
       expect(evaluation.getResultCode()).to.equal(ConditionEvaluationResultCode.ERROR);
       expect(evaluation.getErrorCode()).to.equal(ConditionEvaluationErrorCode.INVALID_CONDITION_VALUE);
-      expect(evaluation.getErrorDetails()).to.deep.equal({ attribute: 'foo', operator: 'numberGreaterThan', modifier: 'exactValueIfExists', value: 'true' });
+      expect(evaluation.getErrorDetails()).to.deep.equal({ attribute: 'foo', operator: 'numberGreaterThan', modifier: 'simpleValueIfExists', value: 'true' });
     });
   });
 });

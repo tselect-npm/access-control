@@ -6,6 +6,10 @@ export class InvalidEnvironmentValueError extends Error {
     this.value = value;
   }
 
+  public getValue(): any {
+    return this.value;
+  }
+
   public static hasInstance(err: any): err is InvalidEnvironmentValueError {
     return err instanceof InvalidEnvironmentValueError;
   }

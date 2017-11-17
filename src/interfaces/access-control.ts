@@ -4,7 +4,7 @@ import { TResource } from '../types/resource';
 import { ISubject } from './subject';
 import { TAttributeName } from '../types/attribute-name';
 
-export interface IAccessControlManager {
+export interface IAccessControl {
   authorize(subject: ISubject<any>, resource: TResource, action: TAction): Promise<IAccess>;
-  filterAttributes<T extends {}>(payload: T, allowedAttributes: TAttributeName[]): Partial<T>;
+  can(subject: ISubject<any>, resource: TResource, action: TAction): Promise<boolean>;
 }
