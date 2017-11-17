@@ -19,6 +19,8 @@ export { ISubject } from './src/interfaces/subject';
 
 export { TAccessControlManagerConstructorOptions } from './src/types/access-control-manager-constructor-options';
 export { TPermission } from './src/types/permission';
+export { TPermissionConditionOperatorDescription } from './src/types/permission-condition-operator-description';
+export { TPermissionCondition } from './src/types/permission-condition';
 export { TPermissionOrId } from './src/types/permission-or-id';
 export { TSubjectOrPrincipal } from './src/types/subject-or-principal';
 export { TResource } from './src/types/resource';
@@ -32,6 +34,8 @@ export { ConditionEvaluationErrorCode } from './src/constants/condition-evaluati
 export { ConditionEvaluationResultCode } from './src/constants/condition-evaluation-result-code';
 export { RESOURCE_PARTS_SEPARATOR } from './src/constants/resource-parts-separator';
 export { WILD_CARD } from './src/constants/wild-card';
+export { UNWIND } from './src/constants/unwind';
+export { BANG } from './src/constants/bang';
 
 export { anyImplies } from './src/utils/any-implies';
 export { implies } from './src/utils/implies';

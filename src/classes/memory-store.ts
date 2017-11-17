@@ -9,7 +9,7 @@ import { toSubjectPrincipal } from '../utils/to-subject-principal';
 import { Subject } from './subject';
 import { TSubjectOrPrincipal } from '../types/subject-or-principal';
 import { TPermissionOrId } from '../types/permission-or-id';
-import { toPermissionId } from '../types/to-permission-id';
+import { toPermissionId } from '../utils/to-permission-id';
 import * as Lodash from 'lodash';
 import { IStore } from '../interfaces/store';
 
