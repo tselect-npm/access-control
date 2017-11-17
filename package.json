@@ -13,7 +13,7 @@
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha --require ./node_modules/ts-node/register --require ./test/setup ./test//**/**/*.test.js",
-    "docs": "./node_modules/.bin/typedoc --out docs --mode file --excludeExternals --excludePrivate ./index.ts",
+    "docs": "./node_modules/.bin/typedoc --out docs --mode file ./index.ts",
     "cov": "./node_modules/.bin/nyc --reporter lcov npm test",
     "prepare": "rm -rf dts && tsc && tsc --outDir dts -d"
   },

@@ -1,0 +1,614 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>@bluejay/access-control</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.js" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">@bluejay/access-control</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="globals.html">Globals</a>
+				</li>
+			</ul>
+			<h1> @bluejay/access-control</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<h1 id="-work-in-progress-">!!! WORK IN PROGRESS !!!</h1>
+				<h1 id="accesscontrol">AccessControl</h1>
+				<p>Simple, flexible and reliable <a href="https://en.wikipedia.org/wiki/Role-based_access_control">RBAC</a> / <a href="https://en.wikipedia.org/wiki/Attribute-based_access_control">ABAC</a> access control for NodeJS and Typescript.</p>
+				<h2 id="guide">Guide</h2>
+				<h3 id="simple-role-based-access-control">Simple role based access control</h3>
+				<p>Many applications define a list of roles which are assigned to users and thus define what those users can or cannot do. This is called RBAC (Role Based Access Control) and is one of the most used access control mechanism. Below we&#39;ll take a look at how this can be implemented with Bluejay&#39;s AccessControl.  </p>
+				<p>First, let&#39;s define some application context:</p>
+				<pre><code class="lang-typescript"><span class="hljs-comment">// Here we define 2 roles: one for regular customers, and a special admin role for internal users.</span>
+<span class="hljs-comment">// Note that Bluejay's AccessControl doesn't require any specific role values nor the use of an enum. A role in Bluejay's world is as simple as a string.</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">enum</span> Role {
+  CUSTOMER = <span class="hljs-string">'customer'</span>,
+  ADMIN = <span class="hljs-string">'admin'</span>
+}
+
+<span class="hljs-comment">// This interface describes the attributes of the "post" entity, which represents blog posts in our example application.</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">interface</span> IPost {
+  id: integer;
+  title: <span class="hljs-built_in">string</span>;
+  content: <span class="hljs-built_in">string</span>;
+  created_by: integer;
+  created_at: <span class="hljs-built_in">Date</span>;
+  updated_at: <span class="hljs-built_in">Date</span>;
+}
+</code></pre>
+				<p>Next, we&#39;ll define a <code>Subject</code> class to hold our user&#39;s information and communicate with Bluejay&#39;s AccessControl. A <em>subject</em> is just a fancy security term that defines a security view of an application user. Note that a subject does not have to represent a human being and could for example be a 3rd party system that connects to your application.</p>
+				<p>For the sake of simplicity, we&#39;ll assume that all users are stored in the same database table and are uniquely identified by an <code>id</code> integer. We&#39;ll implement the abstract <code>getPrincipal()</code> method in order to let Bluejay know what attribute to use as an identifier. A <code>principal</code> is another security term that defines an identifying attribute for an application user.</p>
+				<pre><code class="lang-typescript"><span class="hljs-keyword">import</span> { Subject } <span class="hljs-keyword">from</span> <span class="hljs-string">'@bluejay/access-control'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> UserSubject <span class="hljs-keyword">extends</span> Subject&lt;{ id: <span class="hljs-built_in">number</span> }&gt; {
+  <span class="hljs-keyword">public</span> getPrincipal() {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.get(<span class="hljs-string">'id'</span>);
+  }
+
+  <span class="hljs-comment">// Note: you can perfectly add custom methods here</span>
+}
+</code></pre>
+				<p>We&#39;ll then need to tell Bluejay where to look for permissions. AccessControl comes package with a built-in <code>MemoryStore</code> that allows you to manage permissions in memory. We&#39;ll cover persistent stores later in this documentation.</p>
+				<pre><code class="lang-typescript"><span class="hljs-keyword">import</span> { MemoryStore } <span class="hljs-keyword">from</span> <span class="hljs-string">'@bluejay/access-control'</span>;
+
+<span class="hljs-keyword">const</span> store = <span class="hljs-keyword">new</span> MemoryStore();
+</code></pre>
+				<p>Now let&#39;s create an instance of Bluejay&#39;s AccessControl to be used across the application.</p>
+				<pre><code class="lang-typescript"><span class="hljs-keyword">import</span> { AccessControlManager } <span class="hljs-keyword">from</span> <span class="hljs-string">'@bluejay/access-control'</span>;
+
+<span class="hljs-keyword">const</span> accessControl = <span class="hljs-keyword">new</span> AccessControlManager({ store });
+</code></pre>
+				<p>We&#39;re now ready to declare permissions:</p>
+				<pre><code class="lang-typescript"><span class="hljs-keyword">const</span> customer = <span class="hljs-keyword">new</span> UserSubject({ id: <span class="hljs-number">1</span> });
+<span class="hljs-keyword">const</span> admin = <span class="hljs-keyword">new</span> UserSubject({ id: <span class="hljs-number">2</span> });
+
+store
+  .addPermissionToRole(Role.CUSTOMER, { <span class="hljs-comment">// Limited power for customers</span>
+    id: <span class="hljs-string">'CustomerPostsPolicy'</span>,
+    effect: <span class="hljs-string">'allow'</span>,
+    resource: <span class="hljs-string">'posts'</span>,
+    action: [<span class="hljs-string">'create'</span>, <span class="hljs-string">'read'</span>]
+  })
+  .addPermissionToRole(Role.ADMIN, { <span class="hljs-comment">// Full power for admins</span>
+    id: <span class="hljs-string">'AdminPolicy'</span>,
+    effect: <span class="hljs-string">'allow'</span>,
+    resource: <span class="hljs-string">'*'</span>,
+    action: <span class="hljs-string">'*'</span>
+  })
+  .addRoleToSubject(customer, Role.CUSTOMER)
+  .addRoleToSubject(admin, Role.ADMIN);
+</code></pre>
+				<p>We can finally check our users permissions:</p>
+				<pre><code class="lang-typescript"><span class="hljs-keyword">await</span> accessControl.can(customer, <span class="hljs-string">'posts'</span>, <span class="hljs-string">'create'</span>); <span class="hljs-comment">// true</span>
+<span class="hljs-keyword">await</span> accessControl.can(customer, <span class="hljs-string">'posts'</span>, <span class="hljs-string">'update'</span>); <span class="hljs-comment">// false</span>
+<span class="hljs-keyword">await</span> accessControl.can(admin, <span class="hljs-string">'posts'</span>, <span class="hljs-string">'delete'</span>); <span class="hljs-comment">// true</span>
+</code></pre>
+				<h3 id="simple-attribute-based-access-control">Simple attribute based access control</h3>
+				<p>ABAC (Attribute Based Access Control) provides an fine-grained control over which attributes a particular role is able to access. The following examples assume that you have already read the RBAC examples.</p>
+				<p>Let&#39;s create some more specific permission:</p>
+				<pre><code class="lang-typescript">store
+  .addPermissionToRole(Role.CUSTOMER, {
+    id: <span class="hljs-string">'CustomerCreatePostPolicy'</span>,
+    effect: <span class="hljs-string">'allow'</span>,
+    resource: <span class="hljs-string">'posts'</span>,
+    action: <span class="hljs-string">'create'</span>,
+    condition: {
+      stringEquals: {
+        forAllValues: {
+          bodyAttributes: [<span class="hljs-string">'title'</span>, <span class="hljs-string">'content'</span>]
+        }
+      }
+    }
+  })
+  .addPermissionToRole(Role.ADMIN, {
+    id: <span class="hljs-string">'AdminPolicy'</span>,
+    effect: <span class="hljs-string">'allow'</span>,
+    resource: <span class="hljs-string">'*'</span>,
+    action: <span class="hljs-string">'*'</span>
+  });
+</code></pre>
+				<p>The <code>condition</code> part defines a set of rules used to evaluate whether or not the permission is applicable. Conditions are defined in 3 levels object that can be described as follows:</p>
+				<ul>
+					<li>operator (<code>stringEquals</code> in our case)<ul>
+							<li>modifier (<code>forAllValues</code> in our case)<ul>
+									<li>attributeName (<code>bodyAttributes</code> in our case)</li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+				</ul>
+				<p>An <code>operator</code> defines what type of data we&#39;re comparing and how to compare then. Example operators are <code>dateEquals</code>, <code>numberGreaterThan</code>, <code>bool</code>, <code>stringNotEquals</code>, ...
+					A <code>modifier</code> defines the type of input data (single value vs. array) as well as how to interpret them. Example modifiers are <code>forAllValues</code>, <code>simpleValue</code>, <code>simpleValueIfExists</code>
+				An <code>attributeName</code> defines an attribute that is expected to be present in the <code>environment</code>. Our example defines <code>bodyAttributes</code> which is meant to contain the attributes of the POST request&#39;s body.</p>
+				<p>We are essentially saying that <em>for all values</em> in <code>bodyAttributes</code>, we expect to find an <em>equal string</em> in the provided condition values. Stated another way, we expect the body to only contain attributes that are listed in the condition values.</p>
+				<p>We&#39;ll be building a simple express POST endpoint that allows consumers to create blog posts. We&#39;ll assume that the request has been authenticated and the current user stored as <code>req.user</code>. We&#39;ll also assume that the request&#39;s body has already been validated and contains only valid values in regards to the data model.</p>
+				<p>We will be making use of Bluejay&#39;s <code>Keys</code> utility, which helps performing various attribute related operations on objects and arrays, in a format that is understood by Bluejay.</p>
+				<pre><code class="lang-typescript"><span class="hljs-keyword">import</span> { Keys } <span class="hljs-keyword">from</span> <span class="hljs-string">'@bluejay/access-control'</span>;
+
+app.post(<span class="hljs-string">'/posts'</span>, authenticate(), validatePostBody(), <span class="hljs-keyword">async</span> (req: Request, res: Response) =&gt; {
+  <span class="hljs-keyword">const</span> body: Partial&lt;IPost&gt; = req.body;
+
+  <span class="hljs-keyword">const</span> subject = <span class="hljs-keyword">new</span> UserSubject(req.user);
+
+  <span class="hljs-comment">// We're passing the body's attributes in the environment. Keys.list() will make sure that the resulting list of attributes</span>
+  <span class="hljs-comment">// is understandable by Bluejay.</span>
+  <span class="hljs-keyword">const</span> isAllowed = <span class="hljs-keyword">await</span> accessControl.can(subject, <span class="hljs-string">'posts'</span>, <span class="hljs-string">'create'</span>, { bodyAttributes: Keys.list(body) });
+
+  <span class="hljs-comment">// For an admin user, since no attributes condition has been defined in the permission, any body will be authorized.</span>
+  <span class="hljs-comment">// For a customer user, the access will only be authorized if all attributes in the body are listed in the permission. </span>
+
+  <span class="hljs-keyword">if</span> (isAllowed) {
+    <span class="hljs-keyword">await</span> postService.create(body);
+    res.status(<span class="hljs-number">201</span>).end();
+  } <span class="hljs-keyword">else</span> {
+    res.status(<span class="hljs-number">403</span>).end();
+  }
+});
+</code></pre>
+				<h3 id="filtering-returned-attributes">Filtering returned attributes</h3>
+				<p>It is important to understand that access control validates a request and has therefore no influence over the response that you send to your consumers.</p>
+				<p>If you need to control which fields are exposed in the responses to your different consumers, one solution is to have them explicitly request the set of attributes that they want to see returned. If this is how your application behaves, then you can validate the attributes that a particular user is requesting using a permission that would look like this:</p>
+				<pre><code class="lang-typescript">ac.addPermissionToRole(Role.CUSTOMER, {
+  id: <span class="hljs-string">'CustomerReadPostPolicy'</span>,
+  effect: <span class="hljs-string">'allow'</span>,
+  resource: <span class="hljs-string">'posts'</span>,
+  action: <span class="hljs-string">'read'</span>,
+  condition: {
+    stringEquals: {
+      forAllValues: {
+        fields: [<span class="hljs-string">'id'</span>, <span class="hljs-string">'title'</span>, <span class="hljs-string">'content'</span>, <span class="hljs-string">'created_by'</span>] 
+      }
+    }
+  }
+});
+</code></pre>
+				<p>In this condition, we are essentially saying that <em>for all values</em> in <code>fields</code>, we expect to find an <em>equal string</em> in the permission&#39;s values.  </p>
+				<pre><code class="lang-typescript"><span class="hljs-comment">// We'll assume that the consumers make calls that look like "GET /posts?fields=id,title,content" where the `fields` query parameter defines the fields to be returned as a response.</span>
+
+app.get(<span class="hljs-string">'/posts'</span>, authenticate(), <span class="hljs-keyword">async</span> (req: Request, res: Response) =&gt; {
+  <span class="hljs-keyword">const</span> fields = (req.query.fields || <span class="hljs-string">''</span>).split(<span class="hljs-string">','</span>);
+  <span class="hljs-keyword">const</span> subject = <span class="hljs-keyword">new</span> UserSubject(req.user);
+
+  <span class="hljs-comment">// We're passing the fields in the environment hash so that they can be evaluated</span>
+  <span class="hljs-keyword">const</span> access = <span class="hljs-keyword">await</span> accessControl.authorize(subject, <span class="hljs-string">'posts'</span>, <span class="hljs-string">'read'</span>, { fields });
+
+  <span class="hljs-keyword">if</span> (access.isAllowed()) {
+    <span class="hljs-comment">// The application is responsible for only returning the fields that have been requested. The access control has made sure that only allowed attributes have been requested, so you can safely pass the fields to your service.</span>
+    <span class="hljs-keyword">const</span> data = <span class="hljs-keyword">await</span> postService.list({ fields });
+    res.status(<span class="hljs-number">200</span>).json(data);
+  } <span class="hljs-keyword">else</span> {
+    res.status(<span class="hljs-number">403</span>).end();
+  }
+});
+</code></pre>
+				<p>However, in most applications, the consumer is not expected to provide the fields they want to see returned. Bluejay provides you with a convenient way of dealing with this use case by introducing a special <code>returnedAttributes</code> property in the permission definition. With this knowledge, we can refactor the previous permission to this one:</p>
+				<pre><code class="lang-typescript">ac.addPermissionToRole(Role.CUSTOMER, {
+  id: <span class="hljs-string">'CustomerReadPostPolicy'</span>,
+  effect: <span class="hljs-string">'allow'</span>,
+  resource: <span class="hljs-string">'posts'</span>,
+  action: <span class="hljs-string">'read'</span>,
+  returnedAttributes: [<span class="hljs-string">'id'</span>, <span class="hljs-string">'title'</span>, <span class="hljs-string">'content'</span>, <span class="hljs-string">'created_by'</span>]
+});
+
+<span class="hljs-comment">// We'll now assume that consumers make calls that look like "GET /posts".</span>
+
+app.get(<span class="hljs-string">'/posts'</span>, authenticate(), <span class="hljs-keyword">async</span> (req: Request, res: Response) =&gt; {
+  <span class="hljs-keyword">const</span> subject = <span class="hljs-keyword">new</span> UserSubject(req.user);
+
+  <span class="hljs-comment">// We're not passing any environment data here since the request does not contain any attribute information that could be useful to determine access. the `returnedAttributes` are simply ignored by Bluejay.</span>
+  <span class="hljs-keyword">const</span> access = <span class="hljs-keyword">await</span> accessControl.authorize(subject, <span class="hljs-string">'posts'</span>, <span class="hljs-string">'read'</span>);
+
+  <span class="hljs-keyword">if</span> (access.isAllowed()) {
+    <span class="hljs-comment">// This time, instead of using the request's `fields`, we're using the fields defined in the permission and accessible through `getReturnedAttributes()` on the access. </span>
+    <span class="hljs-keyword">const</span> data = <span class="hljs-keyword">await</span> postService.list({ fields: access.getReturnedAttributes() || [] }); <span class="hljs-comment">// Depending on who's calling, the returned attributes might be undefined</span>
+    res.status(<span class="hljs-number">200</span>).json(data);
+  } <span class="hljs-keyword">else</span> {
+    res.status(<span class="hljs-number">403</span>).end();
+  }
+});
+</code></pre>
+				<p>It is important to note that Bluejay only acts as a middleman here and never uses <code>returnedAttributes</code> to determine access.</p>
+				<p>Also alternatively, if you are not able to have your services only return a specific set of attributes, you can use Bluejay&#39;s <code>Keys</code> utility to filter the payload before responding:</p>
+				<pre><code class="lang-typescript"><span class="hljs-keyword">import</span> { Keys } <span class="hljs-keyword">from</span> <span class="hljs-string">'@bluejay/access-control'</span>;
+
+app.get(<span class="hljs-string">'/posts'</span>, authenticate(), <span class="hljs-keyword">async</span> (req: Request, res: Response) =&gt; {
+  <span class="hljs-keyword">const</span> subject = <span class="hljs-keyword">new</span> UserSubject(req.user);
+
+  <span class="hljs-comment">// We're not passing any environment data here since the request does not contain any attribute information that could be useful to determine access. the `returnedAttributes` are simply ignored by the authorizer.</span>
+  <span class="hljs-keyword">const</span> access = <span class="hljs-keyword">await</span> accessControl.authorize(subject, <span class="hljs-string">'posts'</span>, <span class="hljs-string">'read'</span>);
+
+  <span class="hljs-keyword">if</span> (access.isAllowed()) {
+    <span class="hljs-keyword">const</span> data = <span class="hljs-keyword">await</span> postService.list({ fields: access.getReturnedAttributes() });
+
+    <span class="hljs-comment">// Keys.filter() accepts both objects and arrays</span>
+    <span class="hljs-keyword">const</span> payload = Keys.filter(data, access.getReturnedAttributes())
+
+    res.status(<span class="hljs-number">200</span>).json(payload);
+  } <span class="hljs-keyword">else</span> {
+    res.status(<span class="hljs-number">403</span>).end();
+  }
+});
+</code></pre>
+				<h2 id="inspirations">Inspirations</h2>
+				<p>Special heads up to the following modules and their creators for the precious inspiration:</p>
+				<ul>
+					<li><a href="https://shiro.apache.org/index.html">Apache Shiro</a></li>
+					<li><a href="http://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html">AWS IAM</a></li>
+					<li><a href="https://onury.io/accesscontrol/?content=guide">AccessControl</a></li>
+				</ul>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="globals.html"><em>Globals</em></a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-enum tsd-is-external">
+						<a href="enums/conditionevaluationerrorcode.html" class="tsd-kind-icon">Condition<wbr>Evaluation<wbr>Error<wbr>Code</a>
+					</li>
+					<li class=" tsd-kind-enum tsd-is-external">
+						<a href="enums/conditionevaluationresultcode.html" class="tsd-kind-icon">Condition<wbr>Evaluation<wbr>Result<wbr>Code</a>
+					</li>
+					<li class=" tsd-kind-enum tsd-is-external">
+						<a href="enums/conditionmodifier.html" class="tsd-kind-icon">Condition<wbr>Modifier</a>
+					</li>
+					<li class=" tsd-kind-enum tsd-is-external">
+						<a href="enums/conditionoperator.html" class="tsd-kind-icon">Condition<wbr>Operator</a>
+					</li>
+					<li class=" tsd-kind-enum tsd-is-external">
+						<a href="enums/decisioncode.html" class="tsd-kind-icon">Decision<wbr>Code</a>
+					</li>
+					<li class=" tsd-kind-enum tsd-is-external">
+						<a href="enums/permissioneffect.html" class="tsd-kind-icon">Permission<wbr>Effect</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/access.html" class="tsd-kind-icon">Access</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/accessauthorizer.html" class="tsd-kind-icon">Access<wbr>Authorizer</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/accesscontrol.html" class="tsd-kind-icon">Access<wbr>Control</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/conditionevaluation.html" class="tsd-kind-icon">Condition<wbr>Evaluation</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/conditionevaluator.html" class="tsd-kind-icon">Condition<wbr>Evaluator</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/conditionmodifiersmanager.html" class="tsd-kind-icon">Condition<wbr>Modifiers<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/conditionoperatorsmanager.html" class="tsd-kind-icon">Condition<wbr>Operators<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/invalidconditionvalueerror.html" class="tsd-kind-icon">Invalid<wbr>Condition<wbr>Value<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/invalidenvironmentvalueerror.html" class="tsd-kind-icon">Invalid<wbr>Environment<wbr>Value<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/keys.html" class="tsd-kind-icon">Keys</a>
+					</li>
+					<li class=" tsd-kind-class tsd-is-external">
+						<a href="classes/memorystore.html" class="tsd-kind-icon">Memory<wbr>Store</a>
+					</li>
+					<li class=" tsd-kind-class tsd-has-type-parameter tsd-is-external">
+						<a href="classes/subject.html" class="tsd-kind-icon">Subject</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/iaccess.html" class="tsd-kind-icon">IAccess</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/iaccessauthorizer.html" class="tsd-kind-icon">IAccess<wbr>Authorizer</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/iaccesscontrol.html" class="tsd-kind-icon">IAccess<wbr>Control</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/iconditionevaluation.html" class="tsd-kind-icon">ICondition<wbr>Evaluation</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/iconditionevaluator.html" class="tsd-kind-icon">ICondition<wbr>Evaluator</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/iconditionmodifiersmanager.html" class="tsd-kind-icon">ICondition<wbr>Modifiers<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/iconditionoperatorsmanager.html" class="tsd-kind-icon">ICondition<wbr>Operators<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-is-external">
+						<a href="interfaces/istore.html" class="tsd-kind-icon">IStore</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter tsd-is-external">
+						<a href="interfaces/isubject.html" class="tsd-kind-icon">ISubject</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#taccessconstructoroptions" class="tsd-kind-icon">TAccess<wbr>Constructor<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#taccesscontrolmanagerconstructoroptions" class="tsd-kind-icon">TAccess<wbr>Control<wbr>Manager<wbr>Constructor<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#taccessfactory" class="tsd-kind-icon">TAccess<wbr>Factory</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#taccessjson" class="tsd-kind-icon">TAccessJSON</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#taccessjournal" class="tsd-kind-icon">TAccess<wbr>Journal</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#taccessjournalentry" class="tsd-kind-icon">TAccess<wbr>Journal<wbr>Entry</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#taction" class="tsd-kind-icon">TAction</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tattributename" class="tsd-kind-icon">TAttribute<wbr>Name</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tauthorizerconstructoroptions" class="tsd-kind-icon">TAuthorizer<wbr>Constructor<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tconditionevaluationerrordetails" class="tsd-kind-icon">TCondition<wbr>Evaluation<wbr>Error<wbr>Details</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tconditionevaluationfactory" class="tsd-kind-icon">TCondition<wbr>Evaluation<wbr>Factory</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tconditionevaluationinvalidconditionvalueerrordetails" class="tsd-kind-icon">TCondition<wbr>Evaluation<wbr>Invalid<wbr>Condition<wbr>Value<wbr>Error<wbr>Details</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tconditionevaluationinvalidenvironmentvalueerrordetails" class="tsd-kind-icon">TCondition<wbr>Evaluation<wbr>Invalid<wbr>Environment<wbr>Value<wbr>Error<wbr>Details</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tconditionevaluationjson" class="tsd-kind-icon">TCondition<wbr>EvaluationJSON</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tconditionevaluationmalformedconditionerrordetails" class="tsd-kind-icon">TCondition<wbr>Evaluation<wbr>Malformed<wbr>Condition<wbr>Error<wbr>Details</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tconditionevaluationunknownmodifiererrordetails" class="tsd-kind-icon">TCondition<wbr>Evaluation<wbr>Unknown<wbr>Modifier<wbr>Error<wbr>Details</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tconditionevaluationunknownoperatorerrordetails" class="tsd-kind-icon">TCondition<wbr>Evaluation<wbr>Unknown<wbr>Operator<wbr>Error<wbr>Details</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tconditionevaluatorconstructoroptions" class="tsd-kind-icon">TCondition<wbr>Evaluator<wbr>Constructor<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tconditionmodifierhandler" class="tsd-kind-icon">TCondition<wbr>Modifier<wbr>Handler</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external tsd-is-not-exported">
+						<a href="globals.html#tconditionmodifierhandlermanager" class="tsd-kind-icon">TCondition<wbr>Modifier<wbr>Handler<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tconditionoperatorhandler" class="tsd-kind-icon">TCondition<wbr>Operator<wbr>Handler</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external tsd-is-not-exported">
+						<a href="globals.html#tconditionoperatorshandlermanager" class="tsd-kind-icon">TCondition<wbr>Operators<wbr>Handler<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tconditionvalue" class="tsd-kind-icon">TCondition<wbr>Value</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tcreatepermission" class="tsd-kind-icon">TCreate<wbr>Permission</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tenvironment" class="tsd-kind-icon">TEnvironment</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tpermission" class="tsd-kind-icon">TPermission</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tpermissioncondition" class="tsd-kind-icon">TPermission<wbr>Condition</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tpermissionconditionoperatordescription" class="tsd-kind-icon">TPermission<wbr>Condition<wbr>Operator<wbr>Description</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tpermissionid" class="tsd-kind-icon">TPermission<wbr>Id</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tpermissionorid" class="tsd-kind-icon">TPermission<wbr>OrId</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tresource" class="tsd-kind-icon">TResource</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#trole" class="tsd-kind-icon">TRole</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tsubjectorprincipal" class="tsd-kind-icon">TSubject<wbr>OrPrincipal</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#tsubjectprincipal" class="tsd-kind-icon">TSubject<wbr>Principal</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-is-external">
+						<a href="globals.html#twildcard" class="tsd-kind-icon">TWild<wbr>Card</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-external">
+						<a href="globals.html#bang" class="tsd-kind-icon">BANG</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-external">
+						<a href="globals.html#resource_parts_separator" class="tsd-kind-icon">RESOURCE_<wbr>PARTS_<wbr>SEPARATOR</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-external">
+						<a href="globals.html#unwind" class="tsd-kind-icon">UNWIND</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-external">
+						<a href="globals.html#wild_card" class="tsd-kind-icon">WILD_<wbr>CARD</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-external tsd-is-not-exported">
+						<a href="globals.html#defaultconditionevaluator" class="tsd-kind-icon">default<wbr>Condition<wbr>Evaluator</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-external tsd-is-not-exported">
+						<a href="globals.html#defaultconditionmodifierhandlermanager" class="tsd-kind-icon">default<wbr>Condition<wbr>Modifier<wbr>Handler<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-external tsd-is-not-exported">
+						<a href="globals.html#defaultconditionoperatorshandlermanager" class="tsd-kind-icon">default<wbr>Condition<wbr>Operators<wbr>Handler<wbr>Manager</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-external tsd-is-not-exported">
+						<a href="globals.html#iso8601reg" class="tsd-kind-icon">iso8601<wbr>Reg</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-external tsd-is-not-exported">
+						<a href="globals.html#reg" class="tsd-kind-icon">reg</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#anyimplies" class="tsd-kind-icon">any<wbr>Implies</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#blankstowildcards" class="tsd-kind-icon">blanks<wbr>ToWild<wbr>Cards</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external tsd-is-not-exported">
+						<a href="globals.html#defaultaccessfactory" class="tsd-kind-icon">default<wbr>Access<wbr>Factory</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external tsd-is-not-exported">
+						<a href="globals.html#defaultconditionevaluationfactory" class="tsd-kind-icon">default<wbr>Condition<wbr>Evaluation<wbr>Factory</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#implies" class="tsd-kind-icon">implies</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#isifexistsmodifier" class="tsd-kind-icon">is<wbr>IfExists<wbr>Modifier</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#iswildcard" class="tsd-kind-icon">is<wbr>Wild<wbr>Card</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#topermissionid" class="tsd-kind-icon">to<wbr>Permission<wbr>Id</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#tosubjectprincipal" class="tsd-kind-icon">to<wbr>Subject<wbr>Principal</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
+				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="http://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="assets/js/search.js"><' + '/script>');</script>
+</body>
+</html>
