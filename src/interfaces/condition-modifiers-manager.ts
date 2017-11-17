@@ -1,7 +1,7 @@
 import { ConditionModifier } from '../constants/condition-modifier';
 import { TConditionModifierHandler } from '../types/condition-modifier-handler';
 
-type TConditionModifierHandlerManager = {
+export type TConditionModifierHandlerManager = {
   [modifier in ConditionModifier]: TConditionModifierHandler;
 };
 
