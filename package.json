@@ -10,6 +10,7 @@
   },
   "homepage": "https://github.com/bluebirds-blue-jay/access-control#readme",
   "description": "Simple, flexible and reliable access control for NodeJS and Typescript.",
+  "typings": "./dts/index.d.ts",
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha --require ./node_modules/ts-node/register --require ./test/setup ./test//**/**/*.test.js",
