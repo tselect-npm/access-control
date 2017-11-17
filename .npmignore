@@ -8,3 +8,4 @@ dts/
 tsconfig.json
 .nyc_output/
 coverage/
+examples/
