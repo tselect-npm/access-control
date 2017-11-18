@@ -5,6 +5,6 @@ import { ISubject } from './subject';
 import { TAttributeName } from '../types/attribute-name';
 
 export interface IAccessControl {
-  authorize(subject: ISubject<any>, resource: TResource, action: TAction): Promise<IAccess>;
-  can(subject: ISubject<any>, resource: TResource, action: TAction): Promise<boolean>;
+  authorize(subject: ISubject<any>, resource: TResource, action: TAction, environment?: {}): Promise<IAccess>;
+  can(subject: ISubject<any>, resource: TResource, action: TAction, environment?: {}): Promise<boolean>;
 }
