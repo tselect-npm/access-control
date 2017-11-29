@@ -9,6 +9,5 @@ export type TAccessJSON = {
   consideredPermissions: TPermission[];
   environment: TEnvironment | null;
   decisivePermission: TPermission | null;
-
   journal: TAccessJournal;
 };

@@ -26,6 +26,9 @@ export { TPermissionOrId } from './src/types/permission-or-id';
 export { TSubjectOrPrincipal } from './src/types/subject-or-principal';
 export { TResource } from './src/types/resource';
 export { TAction } from './src/types/action';
+export { TAccessJSON } from './src/types/access-json';
+export { TAccessJournal, TAccessJournalEntry } from './src/types/access-journal';
+export { TEnvironment } from './src/types/environment';
 
 export { PermissionEffect } from './src/constants/permission-effect';
 export { DecisionCode } from './src/constants/decision-code';
