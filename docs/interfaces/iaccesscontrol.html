@@ -100,13 +100,13 @@
 					<a name="authorize" class="tsd-anchor"></a>
 					<h3>authorize</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-external">
-						<li class="tsd-signature tsd-kind-icon">authorize<span class="tsd-signature-symbol">(</span>subject<span class="tsd-signature-symbol">: </span><a href="isubject.html" class="tsd-signature-type">ISubject</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span>, resource<span class="tsd-signature-symbol">: </span><a href="../globals.html#tresource" class="tsd-signature-type">TResource</a>, action<span class="tsd-signature-symbol">: </span><a href="../globals.html#taction" class="tsd-signature-type">TAction</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="iaccess.html" class="tsd-signature-type">IAccess</a><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">authorize<span class="tsd-signature-symbol">(</span>subject<span class="tsd-signature-symbol">: </span><a href="isubject.html" class="tsd-signature-type">ISubject</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span>, resource<span class="tsd-signature-symbol">: </span><a href="../globals.html#tresource" class="tsd-signature-type">TResource</a>, action<span class="tsd-signature-symbol">: </span><a href="../globals.html#taction" class="tsd-signature-type">TAction</a>, environment<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">__type</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="iaccess.html" class="tsd-signature-type">IAccess</a><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/bluebirds-blue-jay/access-control/blob/bd7e70e/src/interfaces/access-control.ts#L8">src/interfaces/access-control.ts:8</a></li>
+									<li>Defined in <a href="https://github.com/bluebirds-blue-jay/access-control/blob/358d641/src/interfaces/access-control.ts#L8">src/interfaces/access-control.ts:8</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -119,6 +119,9 @@
 								</li>
 								<li>
 									<h5>action: <a href="../globals.html#taction" class="tsd-signature-type">TAction</a></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> environment: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">__type</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="iaccess.html" class="tsd-signature-type">IAccess</a><span class="tsd-signature-symbol">&gt;</span></h4>
@@ -129,13 +132,13 @@
 					<a name="can" class="tsd-anchor"></a>
 					<h3>can</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-external">
-						<li class="tsd-signature tsd-kind-icon">can<span class="tsd-signature-symbol">(</span>subject<span class="tsd-signature-symbol">: </span><a href="isubject.html" class="tsd-signature-type">ISubject</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span>, resource<span class="tsd-signature-symbol">: </span><a href="../globals.html#tresource" class="tsd-signature-type">TResource</a>, action<span class="tsd-signature-symbol">: </span><a href="../globals.html#taction" class="tsd-signature-type">TAction</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">can<span class="tsd-signature-symbol">(</span>subject<span class="tsd-signature-symbol">: </span><a href="isubject.html" class="tsd-signature-type">ISubject</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span>, resource<span class="tsd-signature-symbol">: </span><a href="../globals.html#tresource" class="tsd-signature-type">TResource</a>, action<span class="tsd-signature-symbol">: </span><a href="../globals.html#taction" class="tsd-signature-type">TAction</a>, environment<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">__type</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/bluebirds-blue-jay/access-control/blob/bd7e70e/src/interfaces/access-control.ts#L9">src/interfaces/access-control.ts:9</a></li>
+									<li>Defined in <a href="https://github.com/bluebirds-blue-jay/access-control/blob/358d641/src/interfaces/access-control.ts#L9">src/interfaces/access-control.ts:9</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -148,6 +151,9 @@
 								</li>
 								<li>
 									<h5>action: <a href="../globals.html#taction" class="tsd-signature-type">TAction</a></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> environment: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">__type</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4>
