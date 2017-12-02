@@ -4,6 +4,7 @@ import { PermissionEffect } from '../../src/constants/permission-effect';
 import { DecisionCode } from '../../src/constants/decision-code';
 import { TAccessJournalEntry } from '../../src/types/access-journal';
 import { ConditionEvaluationResultCode } from '../../src/constants/condition-evaluation-result-code';
+import { TAccessJSON } from '../../src/types/access-json';
 
 describe('Access', () => {
   describe('#getConsideredPermissions()', () => {
@@ -86,6 +87,33 @@ describe('Access', () => {
       expect(json).to.have.keys(['allowed', 'decisionCode', 'decisivePermission', 'environment', 'consideredPermissions', 'journal']);
       expect(json.journal).to.be.an('array').and.have.lengthOf(1);
       expect(json.consideredPermissions).to.be.an('array').and.have.lengthOf(1);
+    });
+  });
+  describe('.fromJSON()', () => {
+    it('should construct from a JSON representation', () => {
+      const permission: TPermission = { id: 'perm', effect: PermissionEffect.DENY, resource: '*', action: '*' };
+      const json: TAccessJSON = {
+        allowed: true,
+        decisionCode: DecisionCode.EXPLICITLY_ALLOWED,
+        decisivePermission: permission,
+        consideredPermissions: [permission],
+        environment: {},
+        journal: [{
+          permissionId: permission.id,
+          conditionEvaluation: {
+            succeeded: true,
+            resultCode: ConditionEvaluationResultCode.SUCCESS,
+            errorDetails: null,
+            errorCode: null
+          }
+        }]
+      };
+      const access = Access.fromJSON(json);
+      expect(access.isAllowed()).to.equal(true);
+      expect(access.getDecisivePermission()).to.be.an('object');
+      expect(access.getDecisionCode()).to.eql(DecisionCode.EXPLICITLY_ALLOWED);
+      expect(access.getConsideredPermissions()).to.be.an('array').and.have.lengthOf(1);
+      expect(access.getJournal()).to.be.an('array').and.have.lengthOf(1);
     });
   });
 });

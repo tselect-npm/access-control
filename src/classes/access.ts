@@ -76,6 +76,18 @@ export class Access implements IAccess {
     return !this.isAllowed();
   }
 
+  public static fromJSON(accessJSON: TAccessJSON): Access {
+    const access = new Access(accessJSON);
+
+    access.journal = accessJSON.journal;
+    access.decisionCode = accessJSON.decisionCode;
+    access.decisivePermission = accessJSON.decisivePermission;
+    access.consideredPermissions = accessJSON.consideredPermissions;
+    access.environment = accessJSON.environment;
+
+    return access;
+  }
+
   public toJSON(): TAccessJSON {
     return <TAccessJSON>{
       allowed: this.isAllowed(),
