@@ -33,7 +33,9 @@ export abstract class Keys {
     }
   }
 
-  public static filter<T extends ({} | {}[])>(data: T, matchingPatterns: string | string[]): Partial<T> {
+  public static filter<T extends {}>(data: T[], matchingPatterns: string | string[]): Partial<T>[];
+  public static filter<T extends {}>(data: T, matchingPatterns: string | string[]): Partial<T>;
+  public static filter<T extends ({} | {}[])>(data: T|T[], matchingPatterns: string | string[]): Partial<T> | Partial<T>[] {
     if (!matchingPatterns.length) {
       return {};
     }
