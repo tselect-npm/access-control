@@ -35,7 +35,7 @@ export class AccessAuthorizer implements IAccessAuthorizer {
     const relevantPermissions = this.filterRelevantPermissions(resource, action, permissions);
 
     // Create the access.
-    const access = this.accessFactory({ consideredPermissions: relevantPermissions, environment });
+    const access = this.accessFactory({ consideredPermissions: relevantPermissions, environment, resource, action });
 
     if (!relevantPermissions.length) {
       return access.deny(DecisionCode.NO_RELEVANT_PERMISSION_FOUND);
