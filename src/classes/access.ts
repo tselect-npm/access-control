@@ -7,6 +7,8 @@ import { TEnvironment } from '../types/environment';
 import { TAccessJournal, TAccessJournalEntry } from '../types/access-journal';
 import { TAttributeName } from '../types/attribute-name';
 import { TWildCard } from '../types/wild-card';
+import { TAction } from '../types/action';
+import { TResource } from '../types/resource';
 
 export class Access implements IAccess {
   private journal: TAccessJournal;
@@ -14,6 +16,8 @@ export class Access implements IAccess {
   private decisivePermission: TPermission | null;
   private consideredPermissions: TPermission[];
   private environment: TEnvironment | null | undefined;
+  private action: TAction;
+  private resource: TResource;
 
   public constructor(options: TAccessConstructorOptions) {
     this.environment = options.environment;
@@ -21,6 +25,8 @@ export class Access implements IAccess {
     this.journal = [];
     this.decisionCode = DecisionCode.NOT_EVALUATED;
     this.decisivePermission = null;
+    this.resource = options.resource;
+    this.action = options.action;
   }
 
   public getDecisionCode(): DecisionCode {
@@ -29,6 +35,14 @@ export class Access implements IAccess {
 
   public isEvaluated(): boolean {
     return this.decisionCode !== DecisionCode.NOT_EVALUATED;
+  }
+
+  public getResource(): TResource {
+    return this.resource;
+  }
+
+  public getAction(): TAction {
+    return this.action;
   }
 
   public getDecisivePermission(): TPermission | null {
@@ -84,6 +98,8 @@ export class Access implements IAccess {
     access.decisivePermission = accessJSON.decisivePermission;
     access.consideredPermissions = accessJSON.consideredPermissions;
     access.environment = accessJSON.environment;
+    access.resource = accessJSON.resource;
+    access.action = accessJSON.action;
 
     return access;
   }
@@ -91,11 +107,13 @@ export class Access implements IAccess {
   public toJSON(): TAccessJSON {
     return <TAccessJSON>{
       allowed: this.isAllowed(),
-      decisionCode: this.decisionCode,
-      decisivePermission: this.decisivePermission,
-      environment: this.environment,
-      consideredPermissions: this.consideredPermissions,
-      journal: this.journal
+      action: this.getAction(),
+      resource: this.getResource(),
+      decisionCode: this.getDecisionCode(),
+      decisivePermission: this.getDecisivePermission(),
+      environment: this.getEnvironment(),
+      consideredPermissions: this.getConsideredPermissions(),
+      journal: this.getJournal()
     };
   }
 }
