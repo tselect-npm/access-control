@@ -3,7 +3,7 @@
     "module": "commonjs",
     "target": "es6",
     "moduleResolution": "node",
-    "strictNullChecks": true,
+    "strict": true,
     "alwaysStrict": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
