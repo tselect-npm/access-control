@@ -119,7 +119,7 @@ describe('AttributesUtil', () => {
       const data = [{ foo: 'foo', bar: 'bar' }, { foo: 'bar', bar: 'foo' }];
       expect(Keys.filter(data, 'foo')).to.deep.equal([{ foo: 'foo' }, { foo: 'bar' }]);
     });
-    it('should return an empty array', () => {
+    it('should return an array with empty objects', () => {
       const data = [{ foo: 'foo', bar: 'bar' }, { foo: 'bar', bar: 'foo' }];
       expect(Keys.filter(data, [])).to.deep.equal([{}, {}]);
     });
