@@ -36,6 +36,10 @@ export abstract class Keys {
   public static filter<T extends {}>(data: T[], matchingPatterns: string | string[]): Partial<T>[];
   public static filter<T extends {}>(data: T, matchingPatterns: string | string[]): Partial<T>;
   public static filter<T extends ({} | {}[])>(data: T|T[], matchingPatterns: string | string[]): Partial<T> | Partial<T>[] {
+    if (Array.isArray(data)) {
+      return data.map(element => this.filter(element, matchingPatterns)) as T;
+    }
+
     if (!matchingPatterns.length) {
       return {};
     }
@@ -56,10 +60,6 @@ export abstract class Keys {
       if (someNegated && !isBlackList) {
         throw new Error(`Cannot use both black and white list modes at the same time.`);
       }
-    }
-
-    if (Array.isArray(data)) {
-      return data.map(element => this.filter(element, matchingPatterns)) as T;
     }
 
     if (!Lodash.isPlainObject(data)) {

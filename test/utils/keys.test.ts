@@ -52,7 +52,7 @@ describe('AttributesUtil', () => {
     });
   });
 
-  describe('#filterAttributes()', () => {
+  describe('#filter()', () => {
     it('should keep first level property', () => {
       const filtered = Keys.filter(payload, 'first_name');
       expect(filtered).to.deep.equal({ first_name: 'John' });
@@ -118,6 +118,10 @@ describe('AttributesUtil', () => {
     it('should filter an array', () => {
       const data = [{ foo: 'foo', bar: 'bar' }, { foo: 'bar', bar: 'foo' }];
       expect(Keys.filter(data, 'foo')).to.deep.equal([{ foo: 'foo' }, { foo: 'bar' }]);
+    });
+    it('should return an array with empty objects', () => {
+      const data = [{ foo: 'foo', bar: 'bar' }, { foo: 'bar', bar: 'foo' }];
+      expect(Keys.filter(data, [])).to.deep.equal([{}, {}]);
     });
   });
 });
