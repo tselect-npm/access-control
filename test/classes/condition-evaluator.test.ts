@@ -118,5 +118,15 @@ describe('ConditionEvaluator', () => {
       expect(evaluation.getErrorCode()).to.equal(ConditionEvaluationErrorCode.INVALID_CONDITION_VALUE);
       expect(evaluation.getErrorDetails()).to.deep.equal({ attribute: 'foo', operator: 'numberGreaterThan', modifier: 'simpleValueIfExists', value: 'true' });
     });
+    it('should return a positive evaluation using variables', () => {
+      const evaluation = conditionEvaluator.evaluate({
+        numberEquals: {
+          simpleValue: {
+            'foo.id': '{{{bar.id}}}'
+          }
+        }
+      }, { foo: { id: 1 }, bar: { id: 1 } });
+      expect(evaluation.succeeded()).to.equal(true);
+    });
   });
 });

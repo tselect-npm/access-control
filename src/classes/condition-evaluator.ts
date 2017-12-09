@@ -1,24 +1,24 @@
-import { makeArray } from '@bluejay/utils';
 import * as Lodash from 'lodash';
+import { ConditionEvaluationErrorCode } from '../constants/condition-evaluation-error-code';
+import { ConditionModifier } from '../constants/condition-modifier';
+import { ConditionOperator } from '../constants/condition-operator';
+import { IConditionEvaluation } from '../interfaces/condition-evaluation';
 import { IConditionEvaluator } from '../interfaces/condition-evaluator';
+import { IConditionModifiersManager } from '../interfaces/condition-modifiers-manager';
+import { IConditionOperatorsManager } from '../interfaces/condition-operators-manager';
+import { TConditionEvaluationFactory } from '../types/condition-evaluation-factory';
 import { TConditionEvaluatorConstructorOptions } from '../types/condition-evaluator-constructor-options';
+import { TConditionModifierHandler } from '../types/condition-modifier-handler';
 import { TConditionOperatorHandler } from '../types/condition-operator-handler';
 import { TEnvironment } from '../types/environment';
 import { TPermissionCondition } from '../types/permission-condition';
-import { ConditionOperatorsManager } from './condition-operators-manager';
-import { IConditionOperatorsManager } from '../interfaces/condition-operators-manager';
-import { ConditionModifiersManager } from './condition-modifiers-manager';
-import { IConditionModifiersManager } from '../interfaces/condition-modifiers-manager';
-import { TConditionModifierHandler } from '../types/condition-modifier-handler';
-import { InvalidEnvironmentValueError } from './errors/invalid-enviroment-value';
-import { InvalidConditionValueError } from './errors/invalid-condition-value';
-import { ConditionEvaluationErrorCode } from '../constants/condition-evaluation-error-code';
-import { ConditionEvaluation } from './condition-evaluation';
-import { ConditionOperator } from '../constants/condition-operator';
-import { ConditionModifier } from '../constants/condition-modifier';
-import { TConditionEvaluationFactory } from '../types/condition-evaluation-factory';
-import { IConditionEvaluation } from '../interfaces/condition-evaluation';
 import { Keys } from '../utils/keys';
+import { parseConditionValue } from '../utils/parse-condition-value';
+import { ConditionEvaluation } from './condition-evaluation';
+import { ConditionModifiersManager } from './condition-modifiers-manager';
+import { ConditionOperatorsManager } from './condition-operators-manager';
+import { InvalidConditionValueError } from './errors/invalid-condition-value';
+import { InvalidEnvironmentValueError } from './errors/invalid-enviroment-value';
 
 const defaultConditionOperatorsHandlerManager = new ConditionOperatorsManager();
 const defaultConditionModifierHandlerManager = new ConditionModifiersManager();
@@ -70,14 +70,14 @@ export class ConditionEvaluator implements IConditionEvaluator {
 
         for (const attributePath of attributePaths) {
           const environmentValues = Keys.getValues(environment, attributePath);
-          const conditionValue = modifierHash[attributePath];
+          const conditionValues = parseConditionValue(modifierHash[attributePath], environment);
 
           let matches: boolean;
 
           try {
             matches = modifierHandler.call(this.conditionModifierHandlerManager,
               operatorHandler.bind(this.conditionOperatorsHandlerManager),
-              makeArray(conditionValue),
+              conditionValues,
               environmentValues
             );
           } catch (err) {

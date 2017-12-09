@@ -124,7 +124,7 @@ store
   });
 ```
 
-The `condition` part defines a set of rules used to evaluate whether or not the permission is applicable. Conditions are defined in 3 levels object that can be described as follows:
+The `condition` part defines a set of rules used to evaluate whether or not the permission is applicable. Conditions are defined in a 3 levels object that can be described as follows:
 - operator (`stringEquals` in our case)
     - modifier (`forAllValues` in our case)
         - attributeName (`bodyAttributes` in our case)
@@ -162,6 +162,72 @@ app.post('/posts', authenticate(), validatePostBody(), async (req: Request, res:
   }
 });
 ```
+
+### Condition variables
+
+Bluejay provides us with a powerful way of defining variables as condition values, making permissions dynamic.
+
+Let's say that we want to expose an endpoint and allows our users to modify their information. We need to make sure that a given user can only modify their own information, and no one else's. A naive way of defining permissions would look like the following.
+
+```typescript
+store
+  .addPermissionToRole(Role.CUSTOMER, {
+    id: 'CustomerUpdateInformationPolicy',
+    effect: 'allow',
+    resource: 'users',
+    action: 'update',
+    condition: {
+      numberEquals: {
+        simpleValue: {
+          id: '?????' // Here we would need to create one permission per user! 
+        }
+      }
+    }
+  })
+```
+
+Thanks to Bluejay's variables, we have a more dynamic way of doing this.
+
+```typescript
+store
+  .addPermissionToRole(Role.CUSTOMER, {
+    id: 'CustomerUpdateInformationPolicy',
+    effect: 'allow',
+    resource: 'users',
+    action: 'update',
+    condition: {
+      numberEquals: {
+        simpleValue: {
+          'params.id': '{{{subject.id}}}' // This will be evaluated at runtime 
+        }
+      }
+    }
+  })
+```
+
+Now let's look at the endpoint itself.
+
+```typescript
+app.patch('/users/:id', authenticate(), validatePatchBody(), async (req: Request, res: Response) => {
+  const body: Partial<IPost> = req.body;
+  
+  const subject = new UserSubject(req.user);
+  
+  // We're passing both the id and the subject to the environment
+  const isAllowed = await accessControl.can(subject, 'posts', 'create', { params: req.params, subject: subject.toJSON() });
+  
+  // An admin user will be allowed to update any user. The id and subject in the environment will not even be used since no condition is defined.
+  // A customer, on the other side, will only be able to update their own user. 
+  
+  if (isAllowed) {
+    await userService.update({ id: req.params.id }, body);
+    res.status(204).end();
+  } else {
+    res.status(403).end();
+  }
+});
+```
+
 
 ### Filtering returned attributes
 
@@ -250,7 +316,7 @@ app.get('/posts', authenticate(), async (req: Request, res: Response) => {
   const access = await accessControl.authorize(subject, 'posts', 'read');
   
   if (access.isAllowed()) {
-    const data = await postService.list({ fields: access.getReturnedAttributes() });
+    const data = await postService.list();
     
     // Keys.filter() accepts both objects and arrays
     const payload = Keys.filter(data, access.getReturnedAttributes())
