@@ -159,7 +159,7 @@ store
     action: <span class="hljs-string">'*'</span>
   });
 </code></pre>
-				<p>The <code>condition</code> part defines a set of rules used to evaluate whether or not the permission is applicable. Conditions are defined in 3 levels object that can be described as follows:</p>
+				<p>The <code>condition</code> part defines a set of rules used to evaluate whether or not the permission is applicable. Conditions are defined in a 3 levels object that can be described as follows:</p>
 				<ul>
 					<li>operator (<code>stringEquals</code> in our case)<ul>
 							<li>modifier (<code>forAllValues</code> in our case)<ul>
@@ -192,6 +192,60 @@ app.post(<span class="hljs-string">'/posts'</span>, authenticate(), validatePost
   <span class="hljs-keyword">if</span> (isAllowed) {
     <span class="hljs-keyword">await</span> postService.create(body);
     res.status(<span class="hljs-number">201</span>).end();
+  } <span class="hljs-keyword">else</span> {
+    res.status(<span class="hljs-number">403</span>).end();
+  }
+});
+</code></pre>
+				<h3 id="condition-variables">Condition variables</h3>
+				<p>Bluejay provides us with a powerful way of defining variables as condition values, making permissions dynamic.</p>
+				<p>Let&#39;s say that we want to expose an endpoint and allows our users to modify their information. We need to make sure that a given user can only modify their own information, and no one else&#39;s. A naive way of defining permissions would look like the following.</p>
+				<pre><code class="lang-typescript">store
+  .addPermissionToRole(Role.CUSTOMER, {
+    id: <span class="hljs-string">'CustomerUpdateInformationPolicy'</span>,
+    effect: <span class="hljs-string">'allow'</span>,
+    resource: <span class="hljs-string">'users'</span>,
+    action: <span class="hljs-string">'update'</span>,
+    condition: {
+      numberEquals: {
+        simpleValue: {
+          id: <span class="hljs-string">'?????'</span> <span class="hljs-comment">// Here we would need to create one permission per user! </span>
+        }
+      }
+    }
+  })
+</code></pre>
+				<p>Thanks to Bluejay&#39;s variables, we have a more dynamic way of doing this.</p>
+				<pre><code class="lang-typescript">store
+  .addPermissionToRole(Role.CUSTOMER, {
+    id: <span class="hljs-string">'CustomerUpdateInformationPolicy'</span>,
+    effect: <span class="hljs-string">'allow'</span>,
+    resource: <span class="hljs-string">'users'</span>,
+    action: <span class="hljs-string">'update'</span>,
+    condition: {
+      numberEquals: {
+        simpleValue: {
+          <span class="hljs-string">'params.id'</span>: <span class="hljs-string">'{{{subject.id}}}'</span> <span class="hljs-comment">// This will be evaluated at runtime </span>
+        }
+      }
+    }
+  })
+</code></pre>
+				<p>Now let&#39;s look at the endpoint itself.</p>
+				<pre><code class="lang-typescript">app.patch(<span class="hljs-string">'/users/:id'</span>, authenticate(), validatePatchBody(), <span class="hljs-keyword">async</span> (req: Request, res: Response) =&gt; {
+  <span class="hljs-keyword">const</span> body: Partial&lt;IPost&gt; = req.body;
+
+  <span class="hljs-keyword">const</span> subject = <span class="hljs-keyword">new</span> UserSubject(req.user);
+
+  <span class="hljs-comment">// We're passing both the id and the subject to the environment</span>
+  <span class="hljs-keyword">const</span> isAllowed = <span class="hljs-keyword">await</span> accessControl.can(subject, <span class="hljs-string">'posts'</span>, <span class="hljs-string">'create'</span>, { params: req.params, subject: subject.toJSON() });
+
+  <span class="hljs-comment">// An admin user will be allowed to update any user. The id and subject in the environment will not even be used since no condition is defined.</span>
+  <span class="hljs-comment">// A customer, on the other side, will only be able to update their own user. </span>
+
+  <span class="hljs-keyword">if</span> (isAllowed) {
+    <span class="hljs-keyword">await</span> userService.update({ id: req.params.id }, body);
+    res.status(<span class="hljs-number">204</span>).end();
   } <span class="hljs-keyword">else</span> {
     res.status(<span class="hljs-number">403</span>).end();
   }
@@ -270,7 +324,7 @@ app.get(<span class="hljs-string">'/posts'</span>, authenticate(), <span class="
   <span class="hljs-keyword">const</span> access = <span class="hljs-keyword">await</span> accessControl.authorize(subject, <span class="hljs-string">'posts'</span>, <span class="hljs-string">'read'</span>);
 
   <span class="hljs-keyword">if</span> (access.isAllowed()) {
-    <span class="hljs-keyword">const</span> data = <span class="hljs-keyword">await</span> postService.list({ fields: access.getReturnedAttributes() });
+    <span class="hljs-keyword">const</span> data = <span class="hljs-keyword">await</span> postService.list();
 
     <span class="hljs-comment">// Keys.filter() accepts both objects and arrays</span>
     <span class="hljs-keyword">const</span> payload = Keys.filter(data, access.getReturnedAttributes())
@@ -496,6 +550,9 @@ app.get(<span class="hljs-string">'/posts'</span>, authenticate(), <span class="
 						<a href="globals.html#unwind" class="tsd-kind-icon">UNWIND</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-is-external">
+						<a href="globals.html#variable_reg" class="tsd-kind-icon">VARIABLE_<wbr>REG</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-is-external">
 						<a href="globals.html#wild_card" class="tsd-kind-icon">WILD_<wbr>CARD</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-is-external tsd-is-not-exported">
@@ -533,6 +590,9 @@ app.get(<span class="hljs-string">'/posts'</span>, authenticate(), <span class="
 					</li>
 					<li class=" tsd-kind-function tsd-is-external">
 						<a href="globals.html#iswildcard" class="tsd-kind-icon">is<wbr>Wild<wbr>Card</a>
+					</li>
+					<li class=" tsd-kind-function tsd-is-external">
+						<a href="globals.html#parseconditionvalue" class="tsd-kind-icon">parse<wbr>Condition<wbr>Value</a>
 					</li>
 					<li class=" tsd-kind-function tsd-is-external">
 						<a href="globals.html#topermissionid" class="tsd-kind-icon">to<wbr>Permission<wbr>Id</a>
