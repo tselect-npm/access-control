@@ -1,1 +1,0 @@
-export const VARIABLE_REG = /^{{{([a-zA-Z.-_0-9]+)}}}$/g;
