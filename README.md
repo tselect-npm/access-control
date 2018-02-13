@@ -1,5 +1,3 @@
-# !!! WORK IN PROGRESS !!!
-
 # AccessControl
 
 Simple, flexible and reliable [RBAC](https://en.wikipedia.org/wiki/Role-based_access_control) / [ABAC](https://en.wikipedia.org/wiki/Attribute-based_access_control) access control for NodeJS and Typescript.
