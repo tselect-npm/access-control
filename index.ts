@@ -29,6 +29,7 @@ export { TAction } from './src/types/action';
 export { TAccessJSON } from './src/types/access-json';
 export { TAccessJournal, TAccessJournalEntry } from './src/types/access-journal';
 export { TEnvironment } from './src/types/environment';
+export { TAccessConstructorOptions } from './src/types/access-constructor-options';
 
 export { PermissionEffect } from './src/constants/permission-effect';
 export { DecisionCode } from './src/constants/decision-code';
