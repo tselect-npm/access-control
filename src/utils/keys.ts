@@ -1,5 +1,6 @@
 import { makeArray, cloneDeep } from '@bluejay/utils';
 import * as Lodash from 'lodash';
+import { PROPERTY_SEPARATOR } from '../constants/property-separator';
 import { UNWIND } from '../constants/unwind';
 import { BANG } from '../constants/bang';
 import { WILD_CARD } from '../constants/wild-card';
@@ -10,7 +11,7 @@ export abstract class Keys {
       return Lodash.flattenDeep(data.map(element => this.getValues(element, path)));
     }
 
-    const parts = path.split('.');
+    const parts = path.split(PROPERTY_SEPARATOR);
     const leadingPart = parts[0];
     const nextPart = parts[1];
     const isNextUnwind = this.isUnwind(nextPart);
@@ -23,13 +24,13 @@ export abstract class Keys {
     if (isNextUnwind) {
       if (Array.isArray(data[leadingPart])) {
         return Lodash.flattenDeep(data[leadingPart].map((element: any) => {
-          return this.getValues(element, parts.slice(2).join('.'));
+          return this.getValues(element, parts.slice(2).join(PROPERTY_SEPARATOR));
         }));
       } else {
         return [undefined] as any;
       }
     } else {
-      return this.getValues(data[leadingPart], parts.slice(1).join('.'));
+      return this.getValues(data[leadingPart], parts.slice(1).join(PROPERTY_SEPARATOR));
     }
   }
 
@@ -129,7 +130,7 @@ export abstract class Keys {
       return obj;
     }
 
-    const parts = pattern.split('.');
+    const parts = pattern.split(PROPERTY_SEPARATOR);
     const count = parts.length;
     const leadingPart = parts[0];
     const nextPart = parts[1];
@@ -145,7 +146,7 @@ export abstract class Keys {
       if (Array.isArray(obj[leadingPart])) {
         let emptied: number = 0;
         obj[leadingPart].forEach((element: any) => {
-          this.remove(element, parts.slice(2).join('.'));
+          this.remove(element, parts.slice(2).join(PROPERTY_SEPARATOR));
           if (Lodash.isEmpty(element)) {
             emptied++;
           }
@@ -161,7 +162,7 @@ export abstract class Keys {
     }
 
     if (Lodash.isPlainObject(obj[leadingPart])) {
-      this.remove(obj[leadingPart], parts.slice(1).join('.'));
+      this.remove(obj[leadingPart], parts.slice(1).join(PROPERTY_SEPARATOR));
       if (Lodash.isEmpty(obj[leadingPart])) {
         delete obj[leadingPart];
       }
@@ -201,10 +202,10 @@ export abstract class Keys {
   }
 
   private static toPath(parts: string[], prefix: string = '') {
-    return this.prefix(parts.join('.'), prefix);
+    return this.prefix(parts.join(PROPERTY_SEPARATOR), prefix);
   }
 
   private static prefix(path: string, prefix: string) {
-    return prefix ? prefix + '.' + path : path;
+    return prefix ? prefix + PROPERTY_SEPARATOR + path : path;
   }
 }
