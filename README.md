@@ -6,7 +6,7 @@ Simple, flexible and reliable [RBAC](https://en.wikipedia.org/wiki/Role-based_ac
 
 ### Simple role based access control
 
-Many applications define a list of roles which are assigned to users and thus define what those users can or cannot do. This is called RBAC (Role Based Access Control) and is one of the most used access control mechanism. Below we'll take a look at how this can be implemented with Bluejay's AccessControl.  
+Many applications define a list of roles which are assigned to users and thus define what those users can or cannot do. This is called RBAC (Role Based Access Control) and is one of the most used access control mechanism. Below we'll take a look at how this can be implemented with Bluejay's AccessControl.
 
 
 First, let's define some application context:
@@ -41,7 +41,7 @@ export class UserSubject extends Subject<{ id: number }> {
   public getPrincipal() {
     return this.get('id');
   }
-  
+
   // Note: you can perfectly add custom methods here
 }
 ```
@@ -52,7 +52,7 @@ We'll then need to tell Bluejay where to look for permissions. AccessControl com
 import { MemoryStore } from '@bluejay/access-control';
 
 const store = new MemoryStore();
-``` 
+```
 
 Now let's create an instance of Bluejay's AccessControl to be used across the application.
 
@@ -126,7 +126,7 @@ The `condition` part defines a set of rules used to evaluate whether or not the 
 - operator (`stringEquals` in our case)
     - modifier (`forAllValues` in our case)
         - attributeName (`bodyAttributes` in our case)
-        
+
 An `operator` defines what type of data we're comparing and how to compare then. Example operators are `dateEquals`, `numberGreaterThan`, `bool`, `stringNotEquals`, ...
 A `modifier` defines the type of input data (single value vs. array) as well as how to interpret them. Example modifiers are `forAllValues`, `simpleValue`, `simpleValueIfExists`
 An `attributeName` defines an attribute that is expected to be present in the `environment`. Our example defines `bodyAttributes` which is meant to contain the attributes of the POST request's body.
@@ -142,16 +142,16 @@ import { Keys } from '@bluejay/access-control';
 
 app.post('/posts', authenticate(), validatePostBody(), async (req: Request, res: Response) => {
   const body: Partial<IPost> = req.body;
-  
+
   const subject = new UserSubject(req.user);
-  
+
   // We're passing the body's attributes in the environment. Keys.list() will make sure that the resulting list of attributes
   // is understandable by Bluejay.
   const isAllowed = await accessControl.can(subject, 'posts', 'create', { bodyAttributes: Keys.list(body) });
-  
+
   // For an admin user, since no attributes condition has been defined in the permission, any body will be authorized.
-  // For a customer user, the access will only be authorized if all attributes in the body are listed in the permission. 
-  
+  // For a customer user, the access will only be authorized if all attributes in the body are listed in the permission.
+
   if (isAllowed) {
     await postService.create(body);
     res.status(201).end();
@@ -177,7 +177,7 @@ store
     condition: {
       numberEquals: {
         simpleValue: {
-          id: '?????' // Here we would need to create one permission per user! 
+          id: '?????' // Here we would need to create one permission per user!
         }
       }
     }
@@ -196,7 +196,7 @@ store
     condition: {
       numberEquals: {
         simpleValue: {
-          'params.id': '{{{subject.id}}}' // This will be evaluated at runtime 
+          'params.id': '{{{subject.id}}}' // This will be evaluated at runtime
         }
       }
     }
@@ -208,15 +208,15 @@ Now let's look at the endpoint itself.
 ```typescript
 app.patch('/users/:id', authenticate(), validatePatchBody(), async (req: Request, res: Response) => {
   const body: Partial<IPost> = req.body;
-  
+
   const subject = new UserSubject(req.user);
-  
+
   // We're passing both the id and the subject to the environment
   const isAllowed = await accessControl.can(subject, 'posts', 'create', { params: req.params, subject: subject.toJSON() });
-  
+
   // An admin user will be allowed to update any user. The id and subject in the environment will not even be used since no condition is defined.
-  // A customer, on the other side, will only be able to update their own user. 
-  
+  // A customer, on the other side, will only be able to update their own user.
+
   if (isAllowed) {
     await userService.update({ id: req.params.id }, body);
     res.status(204).end();
@@ -242,14 +242,14 @@ ac.addPermissionToRole(Role.CUSTOMER, {
   condition: {
     stringEquals: {
       forAllValues: {
-        fields: ['id', 'title', 'content', 'created_by'] 
+        fields: ['id', 'title', 'content', 'created_by']
       }
     }
   }
 });
 ```
 
-In this condition, we are essentially saying that *for all values* in `fields`, we expect to find an *equal string* in the permission's values.  
+In this condition, we are essentially saying that *for all values* in `fields`, we expect to find an *equal string* in the permission's values.
 
 ```typescript
 // We'll assume that the consumers make calls that look like "GET /posts?fields=id,title,content" where the `fields` query parameter defines the fields to be returned as a response.
@@ -257,10 +257,10 @@ In this condition, we are essentially saying that *for all values* in `fields`, 
 app.get('/posts', authenticate(), async (req: Request, res: Response) => {
   const fields = (req.query.fields || '').split(',');
   const subject = new UserSubject(req.user);
-  
+
   // We're passing the fields in the environment hash so that they can be evaluated
   const access = await accessControl.authorize(subject, 'posts', 'read', { fields });
-  
+
   if (access.isAllowed()) {
     // The application is responsible for only returning the fields that have been requested. The access control has made sure that only allowed attributes have been requested, so you can safely pass the fields to your service.
     const data = await postService.list({ fields });
@@ -269,7 +269,7 @@ app.get('/posts', authenticate(), async (req: Request, res: Response) => {
     res.status(403).end();
   }
 });
-```   
+```
 
 However, in most applications, the consumer is not expected to provide the fields they want to see returned. Bluejay provides you with a convenient way of dealing with this use case by introducing a special `returnedAttributes` property in the permission definition. With this knowledge, we can refactor the previous permission to this one:
 
@@ -286,12 +286,12 @@ ac.addPermissionToRole(Role.CUSTOMER, {
 
 app.get('/posts', authenticate(), async (req: Request, res: Response) => {
   const subject = new UserSubject(req.user);
-  
+
   // We're not passing any environment data here since the request does not contain any attribute information that could be useful to determine access. the `returnedAttributes` are simply ignored by Bluejay.
   const access = await accessControl.authorize(subject, 'posts', 'read');
-  
+
   if (access.isAllowed()) {
-    // This time, instead of using the request's `fields`, we're using the fields defined in the permission and accessible through `getReturnedAttributes()` on the access. 
+    // This time, instead of using the request's `fields`, we're using the fields defined in the permission and accessible through `getReturnedAttributes()` on the access.
     const data = await postService.list({ fields: access.getReturnedAttributes() || [] }); // Depending on who's calling, the returned attributes might be undefined
     res.status(200).json(data);
   } else {
@@ -309,22 +309,178 @@ import { Keys } from '@bluejay/access-control';
 
 app.get('/posts', authenticate(), async (req: Request, res: Response) => {
   const subject = new UserSubject(req.user);
-  
+
   // We're not passing any environment data here since the request does not contain any attribute information that could be useful to determine access. the `returnedAttributes` are simply ignored by the authorizer.
   const access = await accessControl.authorize(subject, 'posts', 'read');
-  
+
   if (access.isAllowed()) {
     const data = await postService.list();
-    
+
     // Keys.filter() accepts both objects and arrays
     const payload = Keys.filter(data, access.getReturnedAttributes())
-    
+
     res.status(200).json(payload);
   } else {
     res.status(403).end();
   }
 });
 ```
+
+### Returned attributes in depth: pattern matching and the `Keys` utility
+
+The following examples apply to systems where the returned attributes are manually filtered using the `Keys.filter()` utility.
+
+Bluejay uses a proprietary syntax for describing `returnedAttributes` in combination with `Keys`. The reason is that we want to offer a custom-fit experience when dealing with those attributes as well as make sure that we only perform necessary operations in order to obtain the best possible performance.
+
+The examples below use a data structure that describes a blog post with various attributes.
+
+```typescript
+type BlogPost = {
+  id: number:
+  title: string;
+  content: string;
+  author: {
+    id: number;
+    username: string;
+    email: string;
+    hobbies: string[];
+  },
+  comments: {
+    id: number;
+    content: string;
+    author: {
+      id: number;
+      username: string;
+      email: string;
+      hobbies: string[];
+    }
+  }[];
+}
+```
+
+#### Whitelist approach
+
+Whitelisting is the recommended way to describe your returned attributes, because it offers you the peace of mind and clarity of knowing what exactly is being returned to your user.
+
+Let's say we want the author of a blog post to receive all information about a blog post except the email addresses of the comments authors. We would write the returned attributes as such:
+
+```typescript
+const permission: TPermission = {
+  id: 'User:BlogPost:GetItem',
+  resource: 'blog-posts',
+  action: 'get-item',
+  effect: PermissionEffect.ALLOW,
+  returnedAttributes: [
+    'id',
+    'title',
+    'content',
+    'author.id',
+    'author.username',
+    'author.email',
+    'author.hobbies',
+    'comments.[].id',
+    'comments.[].content',
+    'comments.[].author.id',
+    'comments.[].author.username',
+    'comments.[].author.hobbies',
+ ]
+};
+```
+
+Because we omitted `comments.[].author.email`, the user won't see the commenters emails, assuming that we filtered the payload using `Keys.filter()`.
+
+#### The `!` (bang) operator or the blacklist approach
+
+While the whitelist approach provides the most security, there are times where you will prefer to not describe all fields but rather exclude particular fields from the payload. Here comes the `!` operator. In order to obtain the exact same result as previously, we could rewrite the permission as such:
+
+```typescript
+const permission: TPermission = {
+  id: 'User:BlogPost:GetItem',
+  resource: 'blog-posts',
+  action: 'get-item',
+  effect: PermissionEffect.ALLOW,
+  returnedAttributes: [
+    '!comments.[].author.email',
+  ]
+};
+```
+
+Magic!
+
+*Note:* It is not possible to combine the whitelist and blacklist approaches in a given `returnedAttributes` array
+
+
+#### The `*` (wild card) operator
+
+The simplest and most permissive `returnedAttributes` can be written as such:
+
+```typescript
+const permission: TPermission = {
+  id: 'User:BlogPost:GetItem',
+  resource: 'blog-posts',
+  action: 'get-item',
+  effect: PermissionEffect.ALLOW,
+  returnedAttributes: '*'
+};
+```
+
+This basically means: return everything.
+
+
+We could also want to simplify part of the returned attributes by combining the whitelist approach and the wild cards. We could for example rewrite the initial example as such:
+
+```typescript
+const permission: TPermission = {
+  id: 'User:BlogPost:GetItem',
+  resource: 'blog-posts',
+  action: 'get-item',
+  effect: PermissionEffect.ALLOW,
+  returnedAttributes: [
+    'id',
+    'title',
+    'content',
+    'author.*',
+    'comments.[].id',
+    'comments.[].content',
+    'comments.[].author.id',
+    'comments.[].author.username',
+    'comments.[].author.hobbies',
+ ]
+};
+```
+
+Notice the `author.*` that basically says: returned everything in the nested `author` object. Note that this doesn't have any influence over the nested `author` objects in the `comments`, but exclusively at the root of the object.
+
+*Info:* When you use the blacklist approach, a `returnedAttributes` with a value of `['!comments.[].author.email']` is essentially equivalent to `['*', '!comments.[].author.email']`
+
+#### Arrays and the `[]` (unwind) operator
+
+You may have noticed the particular syntax for the `comments` array in the previous examples. This operator allows us to say "for each element in the array, apply the following pattern". It is particularly useful when dealing with lists of objects with no predefined length.
+
+When dealing with tuples though, each element in the array can be referenced by its index. Let's say, for example, that we only want users to receive the first comment from the `comments` array. We would write the permission as such:
+
+
+```typescript
+const permission: TPermission = {
+  id: 'User:BlogPost:GetItem',
+  resource: 'blog-posts',
+  action: 'get-item',
+  effect: PermissionEffect.ALLOW,
+  returnedAttributes: [
+    'id',
+    'title',
+    'content',
+    'author.*',
+    'comments.0.id',
+    'comments.0.content',
+    'comments.0.author.id',
+    'comments.0.author.username',
+    'comments.0.author.hobbies',
+ ]
+};
+```
+
+This will ensure that only the first comment is returned.
 
 
 ## Inspirations
