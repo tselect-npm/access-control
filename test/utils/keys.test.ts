@@ -1,6 +1,6 @@
 import { Keys } from '../../';
 
-describe('AttributesUtil', () => {
+describe('Keys', () => {
   const payload = {
     id: 1,
     first_name: 'John',
@@ -65,9 +65,26 @@ describe('AttributesUtil', () => {
       const filtered = Keys.filter(payload, 'preferences.email.news');
       expect(filtered).to.deep.equal({ preferences: { email: { news: true } } });
     });
+    it('should keep all nested properties', () => {
+      const filtered = Keys.filter(payload, 'preferences.*');
+      expect(filtered).to.deep.equal({
+        preferences: {
+          email: { news: true, newPost: false },
+          sms: { newComment: true }
+        }
+      });
+    });
     it('should keep nested array property', () => {
       const filtered = Keys.filter(payload, 'posts.[].title');
       expect(filtered).to.deep.equal({ posts: [{ title: 'RBAC' }, { title: 'ABAC' }] });
+    });
+    it('should keep all nested array property', () => {
+      const filtered = Keys.filter(payload, '*.[].title');
+      expect(filtered).to.deep.equal({ posts: [{ title: 'RBAC' }, { title: 'ABAC' }] });
+    });
+    it('should keep all nested array property', () => {
+      const filtered = Keys.filter(payload, '*.[].content');
+      expect(filtered).to.deep.equal({ 'posts': [{ 'comments': [{ 'content': 'Super cool' }, { 'content': 'Ugh?' }, {}], 'content': 'Lorem ipsum' }, { 'content': 'Lorem ipsum' }] });
     });
     it('should keep full array', () => {
       const filtered = Keys.filter(payload, 'posts');
