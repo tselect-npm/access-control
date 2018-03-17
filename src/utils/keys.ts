@@ -41,6 +41,8 @@ export abstract class Keys {
       return data.map(element => this.filter(element, matchingPatterns)) as T;
     }
 
+    matchingPatterns = makeArray(matchingPatterns);
+
     if (!matchingPatterns.length) {
       return {};
     }
@@ -49,13 +51,20 @@ export abstract class Keys {
     let someNegated = false;
     let isBlackList = true;
 
-    for (const pattern of makeArray(matchingPatterns)) {
+    const registerPattern = (pattern: string) => {
+      if (this.isInvalidPattern(pattern)) {
+        throw new Error(`Invalid pattern: "${pattern}".`);
+      }
+      patterns.push(pattern);
+    };
+
+    for (const pattern of matchingPatterns) {
       if (this.isNegated(pattern)) {
         someNegated = true;
-        patterns.push(this.unNegate(pattern));
+        registerPattern(this.unNegate(pattern));
       } else {
         isBlackList = false;
-        patterns.push(pattern);
+        registerPattern(pattern);
       }
 
       if (someNegated && !isBlackList) {
@@ -174,6 +183,18 @@ export abstract class Keys {
     return obj;
   }
 
+  private static isInvalidPattern(pattern: string) {
+    this.unNegate(pattern);
+
+    if (this.isWildCard(pattern)) {
+      return false;
+    }
+
+    return pattern.startsWith(WILD_CARD) ||
+      pattern.startsWith(UNWIND) ||
+      pattern.startsWith(PROPERTY_SEPARATOR);
+  }
+
   private static isNegated(pattern: string) {
     return pattern.charAt(0) === BANG;
   }
@@ -194,7 +215,9 @@ export abstract class Keys {
   }
 
   private static escapeForRegExp(str: string): string {
-    return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    return str
+      .replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+      .replace(/\\\*$/, '\.'); // Trailing wild card accepts anything
   }
 
   private static implies(pattern: string, key: string) {

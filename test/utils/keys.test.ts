@@ -123,5 +123,29 @@ describe('AttributesUtil', () => {
       const data = [{ foo: 'foo', bar: 'bar' }, { foo: 'bar', bar: 'foo' }];
       expect(Keys.filter(data, [])).to.deep.equal([{}, {}]);
     });
+    it('should keep nested properties', () => {
+      const filtered = Keys.filter(payload, ['preferences.*']);
+      expect(filtered).to.deep.equal({
+        preferences: {
+          email: { news: true, newPost: false },
+          sms: { newComment: true }
+        }
+      });
+    });
+    it('should throw if pattern starts with a wild card', () => {
+      expect(() => {
+        Keys.filter({}, ['*.foo']);
+      }).to.throw(/invalid/i);
+    });
+    it('should throw if pattern starts with unwind', () => {
+      expect(() => {
+        Keys.filter({}, ['[].foo']);
+      }).to.throw(/invalid/i);
+    });
+    it('should throw if pattern starts with a dot', () => {
+      expect(() => {
+        Keys.filter({}, ['.foo']);
+      }).to.throw(/invalid/i);
+    });
   });
 });
