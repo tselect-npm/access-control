@@ -193,7 +193,8 @@ export abstract class Keys {
   }
 
   private static escapeForRegExp(str: string): string {
-    return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const escaped = str.replace(/[-\/\\^$+?.()|[\]{}]/g, '\\$&');
+    return escaped.replace('*', '.*'); // Translate from glob style to regexp
   }
 
   private static implies(pattern: string, key: string) {
