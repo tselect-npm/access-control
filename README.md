@@ -2,6 +2,14 @@
 
 Simple, flexible and reliable [RBAC](https://en.wikipedia.org/wiki/Role-based_access_control) / [ABAC](https://en.wikipedia.org/wiki/Attribute-based_access_control) access control for NodeJS and Typescript.
 
+## Requirements
+- `node >= 7`
+- `typescript >= 2.4`
+
+## Installation
+
+`npm i @bluejay/access-control`
+
 ## Guide
 
 ### Simple role based access control
