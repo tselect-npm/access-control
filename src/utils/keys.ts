@@ -17,6 +17,10 @@ export abstract class Keys {
     const isNextUnwind = this.isUnwind(nextPart);
     const isLast = isNextUnwind ? parts.length === 2 : parts.length === 1;
 
+    if (Lodash.isNil(data)) {
+      return [undefined] as any;
+    }
+
     if (isLast) {
       return Lodash.flattenDeep([data[leadingPart]]);
     }

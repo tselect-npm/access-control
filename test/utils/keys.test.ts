@@ -41,6 +41,9 @@ describe('AttributesUtil', () => {
     it('should return nested value', () => {
       expect(Keys.getValues(payload, 'preferences.email.news')).to.deep.equal([true]);
     });
+    it('should return undefined for non existing deep value', () => {
+      expect(Keys.getValues(payload, 'preferences.foo.bar')).to.deep.equal([undefined]);
+    });
     it('should return array values', () => {
       expect(Keys.getValues(payload, 'posts.[].comments.[].content')).to.deep.equal(['Super cool', 'Ugh?', undefined, undefined]);
     });
