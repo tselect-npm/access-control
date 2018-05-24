@@ -128,5 +128,31 @@ describe('ConditionEvaluator', () => {
       }, { foo: { id: 1 }, bar: { id: 1 } });
       expect(evaluation.succeeded()).to.equal(true);
     });
+    it('should compute forAllValues', () => {
+      const evaluation = conditionEvaluator.evaluate({
+        numberEquals: {
+          forAllValues: {
+            'foo.ids': '{{{bar.ids}}}'
+          }
+        }
+      }, {
+        'foo': { 'ids': [1, 2] },
+        'bar': { 'ids': [1, 2] }
+      });
+      expect(evaluation.succeeded()).to.equal(true);
+    });
+    it('should compute forAllValuesIfExists', () => {
+      const evaluation = conditionEvaluator.evaluate({
+        numberEquals: {
+          forAllValuesIfExists: {
+            'foo.ids': '{{{bar.ids}}}'
+          }
+        }
+      }, {
+        'foo': { 'ids': [1, 2] },
+        'bar': { 'ids': [1, 2] }
+      });
+      expect(evaluation.succeeded()).to.equal(true);
+    });
   });
 });
