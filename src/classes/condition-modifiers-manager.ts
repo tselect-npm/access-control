@@ -28,10 +28,17 @@ export class ConditionModifiersManager implements IConditionModifiersManager {
       if (!this.exists(environmentValue)) {
         continue;
       }
+      let matchesOne = false;
+
       for (const conditionValue of conditionValues) {
-        if (!handler(conditionValue, environmentValue)) {
-          return false;
+        if (handler(conditionValue, environmentValue)) {
+          matchesOne = true;
+          break;
         }
+      }
+
+      if (!matchesOne) {
+        return false;
       }
     }
     return true;
