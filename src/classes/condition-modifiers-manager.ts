@@ -1,10 +1,14 @@
+import * as Lodash from 'lodash';
 import { IConditionModifiersManager } from '../interfaces/condition-modifiers-manager';
 import { TConditionOperatorHandler } from '../types/condition-operator-handler';
 import { TConditionValue } from '../types/condition-value';
-import * as Lodash from 'lodash';
 
 export class ConditionModifiersManager implements IConditionModifiersManager {
   public forAllValues(handler: TConditionOperatorHandler, conditionValues: TConditionValue[], environmentValues: any[]): boolean {
+    if (!environmentValues.length) {
+      return true;
+    }
+
     for (const environmentValue of environmentValues) {
       let matchesOne = false;
 
@@ -24,20 +28,22 @@ export class ConditionModifiersManager implements IConditionModifiersManager {
   }
 
   public forAllValuesIfExists(handler: TConditionOperatorHandler, conditionValues: TConditionValue[], environmentValues: any[]): boolean {
-    for (const environmentValue of environmentValues) {
-      if (!this.exists(environmentValue)) {
-        continue;
+    const existingEnvironmentValues = environmentValues.reduce((acc, currentValue) => {
+      if (this.exists(currentValue)) {
+        acc.push(currentValue);
       }
-      for (const conditionValue of conditionValues) {
-        if (!handler(conditionValue, environmentValue)) {
-          return false;
-        }
-      }
-    }
-    return true;
+
+      return acc;
+    }, []);
+
+    return this.forAllValues(handler, conditionValues, existingEnvironmentValues);
   }
 
   public forAnyValue(handler: TConditionOperatorHandler, conditionValues: TConditionValue[], environmentValues: any[]): boolean {
+    if (!environmentValues.length) {
+      return false;
+    }
+
     for (const environmentValue of environmentValues) {
       for (const conditionValue of conditionValues) {
         if (handler(conditionValue, environmentValue)) {
@@ -49,38 +55,47 @@ export class ConditionModifiersManager implements IConditionModifiersManager {
   }
 
   public forAnyValueIfExists(handler: TConditionOperatorHandler, conditionValues: TConditionValue[], environmentValues: any[]): boolean {
-    let oneExists = false;
-    for (const environmentValue of environmentValues) {
-      if (!this.exists(environmentValue)) {
-        continue;
-      } else {
-        oneExists = true;
+    const existingEnvironmentValues = environmentValues.reduce((acc, currentValue) => {
+      if (this.exists(currentValue)) {
+        acc.push(currentValue);
       }
-      for (const conditionValue of conditionValues) {
-        if (handler(conditionValue, environmentValue)) {
-          return true;
-        }
-      }
-    }
-    return !oneExists;
+
+      return acc;
+    }, []);
+
+    return this.forAnyValue(handler, conditionValues, existingEnvironmentValues);
   }
 
   public simpleValue(handler: TConditionOperatorHandler, conditionValues: TConditionValue[], environmentValues: any[]): boolean {
+    if (!environmentValues.length) {
+      return false;
+    }
+
     const environmentValue = environmentValues[0];
+
     for (const conditionValue of conditionValues) {
       if (handler(conditionValue, environmentValue)) {
         return true;
       }
     }
+
     return false;
   }
 
   public simpleValueIfExists(handler: TConditionOperatorHandler, conditionValues: TConditionValue[], environmentValues: any[]): boolean {
-    const environmentValue = environmentValues[0];
-    if (!this.exists(environmentValue)) {
+    const existingEnvironmentValues = environmentValues.reduce((acc, currentValue) => {
+      if (this.exists(currentValue)) {
+        acc.push(currentValue);
+      }
+
+      return acc;
+    }, []);
+
+    if (!existingEnvironmentValues.length) {
       return true;
     }
-    return this.simpleValue(handler, conditionValues, environmentValues);
+
+    return this.simpleValue(handler, conditionValues, existingEnvironmentValues);
   }
 
   protected exists(value: any): boolean {
