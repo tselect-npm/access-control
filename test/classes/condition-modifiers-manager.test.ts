@@ -82,8 +82,8 @@ describe('ConditionModifiersManager', () => {
   });
 
   describe('#forAnyValueIfExists()', () => {
-    it('should return true if not exists', () => {
-      expect(handlersManager.forAnyValueIfExists(() => false, ['foo'], [undefined])).to.equal(true);
+    it('should return false if not exists', () => {
+      expect(handlersManager.forAnyValueIfExists(() => false, ['foo'], [undefined])).to.equal(false);
     });
     it('should return true if all return true', () => {
       expect(handlersManager.forAnyValueIfExists(() => true, ['foo', 'bar'], ['bar'])).to.equal(true);
@@ -97,8 +97,8 @@ describe('ConditionModifiersManager', () => {
     it('should return true for a mix of correct and non existing values', () => {
       expect(handlersManager.forAnyValueIfExists((a, b) => a === b, ['foo', 'bar'], [undefined, 'foo', 'boz'])).to.equal(true);
     });
-    it('should return true if no values', () => {
-      expect(handlersManager.forAnyValueIfExists(() => false, ['foo'], [])).to.equal(true);
+    it('should return false if no values', () => {
+      expect(handlersManager.forAnyValueIfExists(() => false, ['foo'], [])).to.equal(false);
     });
   });
 });

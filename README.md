@@ -137,7 +137,9 @@ The `condition` part defines a set of rules used to evaluate whether or not the 
 
 An `operator` defines what type of data we're comparing and how to compare then. Example operators are `dateEquals`, `numberGreaterThan`, `bool`, `stringNotEquals`, ...
 A `modifier` defines the type of input data (single value vs. array) as well as how to interpret them. Example modifiers are `forAllValues`, `simpleValue`, `simpleValueIfExists`
-An `attributeName` defines an attribute that is expected to be present in the `environment`. Our example defines `bodyAttributes` which is meant to contain the attributes of the POST request's body.
+An `attributeName` defines an attribute that *may be* be present in the `environment`. Our example defines `bodyAttributes` which is meant to contain the attributes of the POST request's body.
+
+For more about condition modifiers, see the next section.
 
 We are essentially saying that *for all values* in `bodyAttributes`, we expect to find an *equal string* in the provided condition values. Stated another way, we expect the body to only contain attributes that are listed in the condition values.
 
@@ -167,6 +169,197 @@ app.post('/posts', authenticate(), validatePostBody(), async (req: Request, res:
     res.status(403).end();
   }
 });
+```
+
+### Condition modifiers
+
+Condition modifiers are largely inspired by AWS IAM policies, with some minor additions (see https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_multi-value-conditions.html and https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_condition_operators.html).
+
+We support 6 modifiers:
+- `simpleValue`
+- `simpleValueIfExists`
+- `forAllValues`
+- `forAllValuesIfExists`
+- `forAnyValue`
+- `forAnyValueIfExists`
+
+#### Modifiers that check a single value
+
+##### `simpleValue`
+
+```
+const condition = {
+  stringEquals: {
+    simpleValue: {
+      foo: 'bar'
+    }
+  }
+};
+
+
+const ok = {
+  foo: 'bar' // This will pass because foo === 'bar'
+};
+
+const nok = {
+  foo: 'baz' // This won't pass because foo !== 'bar'
+};
+
+const nok2 = {
+  foo: undefined // This won't pass because foo !== 'bar'
+}
+```
+
+##### `simpleValueIfExists`
+
+```
+const condition = {
+  stringEquals: {
+    simpleValueIfExists: {
+      foo: 'bar'
+    }
+  }
+};
+
+
+const ok = {
+  foo: 'bar' // This will pass because foo === 'bar'
+};
+
+const ok2 = {
+  foo: undefined // Thiswill pass because foo does not exist
+}
+
+const nok = {
+  foo: 'baz' // This won't pass because foo !== 'bar'
+};
+
+```
+
+#### Modifiers that check multiple values
+
+##### `forAllValues`
+
+This modifier enforces that all values - if any - present in the environment must match a value in the condition.
+
+```
+const condition = {
+  stringEquals: {
+    forAllValues: {
+      foo: ['bar', 'baz', 'boo']
+    }
+  }
+};
+
+
+const ok = {
+  foo: ['bar'] // This will pass because foo is "one of" the condition's value
+};
+
+const ok2 = {
+  foo: [] // This will pass because no value in foo contradicts the condition's values
+};
+
+const nok = {
+  foo: ['booz', 'bar'] // This won't pass because booz is not listed in the condition's values
+};
+
+const nok2 = {
+  foo: [undefined] // This won't pass because undefined is not an allowed value
+}
+```
+
+##### `forAllValuesIfExists`
+
+This modifier does exactly the same thing as `forAllValues` expect that it ignores null/undefined values.
+
+```
+const condition = {
+  stringEquals: {
+    forAllValuesIfExists: {
+      foo: ['bar', 'baz', 'boo']
+    }
+  }
+};
+
+
+const ok = {
+  foo: ['bar'] // This will pass because foo is "one of" the condition's value
+};
+
+const ok2 = {
+  foo: [] // This will pass because no value in foo contradicts the condition's values
+};
+
+const ok3 = {
+  foo: [undefined] // This will pass because only "existing" values are evaluated
+}
+
+const nok = {
+  foo: ['booz', 'bar'] // This won't pass because booz is not listed in the condition's values
+};
+```
+
+##### `forAnyValue`
+
+This modifier says that the condition is met if at least one value in the environment matches the accepted values in the condition.
+
+```
+const condition = {
+  stringEquals: {
+    forAnyValue: {
+      foo: ['bar', 'baz', 'boo']
+    }
+  }
+};
+
+
+const ok = {
+  foo: ['bar', 'booz'] // This will pass because bar is an accepted value
+};
+
+const ok2 = {
+  foo: ['bar', 'baz'] // This will pass because all values are accepted
+};
+
+const nok = {
+  foo: ['booz', 'biz'] // This won't pass because no value matches the condition values
+};
+
+const nok2 = {
+  foo: [] // This won't pass because no value in foo matches a condition value
+};
+```
+
+##### `forAnyValueIfExists`
+
+You will most likely never use this modifier unless you expect the environment values to be a mix of valid and null/undefined values.
+
+```
+const condition = {
+  stringEquals: {
+    forAnyValueIfExists: {
+      foo: ['bar', 'baz', 'boo']
+    }
+  }
+};
+
+
+const ok = {
+  foo: ['bar', 'booz', undefined] // This will pass because bar is an accepted value
+};
+
+const nok = {
+  foo: ['booz', 'biz'] // This won't pass because no value matches the condition values
+};
+
+const nok2 = {
+  foo: [] // This won't pass because no value in foo matches a condition value
+};
+
+const nok3 = {
+  foo: [undefined] // This is equivalent to an empty array
+};
 ```
 
 ### Condition variables
