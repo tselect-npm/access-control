@@ -221,11 +221,12 @@ export abstract class Keys {
   private static escapeForRegExp(str: string): string {
     return str
       .replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
-      .replace(/\\\*$/, '\.'); // Trailing wild card accepts anything
+      .replace(/\\\*$/, '\.*'); // Trailing wild card accepts anything
   }
 
   private static implies(pattern: string, key: string) {
-    return this.isWildCard(pattern) || !!new RegExp('^' + this.escapeForRegExp(pattern)).exec(key);
+    const reg = new RegExp('^' + this.escapeForRegExp(pattern) + (pattern.endsWith(WILD_CARD) ? '' : '(\\..+)?$'));
+    return this.isWildCard(pattern) || !!reg.exec(key);
   }
 
   private static toPath(parts: string[], prefix: string = '') {

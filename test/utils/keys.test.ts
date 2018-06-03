@@ -1,3 +1,4 @@
+import { Key } from 'readline';
 import { Keys } from '../../';
 
 describe('AttributesUtil', () => {
@@ -6,6 +7,7 @@ describe('AttributesUtil', () => {
     first_name: 'John',
     last_name: 'Doe',
     password: 'p@ssw0rd',
+    password_reset_required: false,
     preferences: {
       email: { news: true, newPost: false },
       sms: { newComment: true }
@@ -105,10 +107,17 @@ describe('AttributesUtil', () => {
         id: 1,
         first_name: 'John',
         last_name: 'Doe',
+        password_reset_required: false,
         preferences: {
           sms: { newComment: true }
         },
       });
+    });
+    it('should not mismatch similar properties', () => {
+      expect(Keys.filter(payload, ['password'])).to.deep.equal({ password: 'p@ssw0rd' });
+    });
+    it('should mismatch similar properties', () => {
+      expect(Keys.filter(payload, ['password*'])).to.deep.equal({ password: 'p@ssw0rd', password_reset_required: false });
     });
     it('should keep nothing', () => {
       const filtered = Keys.filter(payload, []);
