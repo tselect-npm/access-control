@@ -1,6 +1,8 @@
 export enum ConditionOperator {
   STRING_EQUALS = 'stringEquals',
   STRING_NOT_EQUALS = 'stringNotEquals',
+  STRING_IMPLIES = 'stringImplies',
+  STRING_NOT_IMPLIES = 'stringNotImplies',
 
   NUMBER_EQUALS = 'numberEquals',
   NUMBER_NOT_EQUALS = 'numberNotEquals',

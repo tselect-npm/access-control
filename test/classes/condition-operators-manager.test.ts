@@ -31,6 +31,32 @@ describe('ConditionOperatorsManager', () => {
       expect(handlersManager.stringNotEquals('foo', 'foo')).to.equal(false);
     });
   });
+  describe('#stringImplies()', () => {
+    it('should throw if env value is not a string', () => {
+      expect(() => {
+        handlersManager.stringImplies('34', 34);
+      }).to.throw(InvalidEnvironmentValueError);
+    });
+    it('should return true if values match', () => {
+      expect(handlersManager.stringImplies('foo.*', 'foo.bar')).to.equal(true);
+    });
+    it('should return false if values differ', () => {
+      expect(handlersManager.stringImplies('foo.bar', 'foo.baz')).to.equal(false);
+    });
+  });
+  describe('#stringNotImplies()', () => {
+    it('should throw if env value is not a string', () => {
+      expect(() => {
+        handlersManager.stringNotImplies('34', 34);
+      }).to.throw(InvalidEnvironmentValueError);
+    });
+    it('should return true if values match', () => {
+      expect(handlersManager.stringNotImplies('foo.*', 'foo.bar')).to.equal(false);
+    });
+    it('should return false if values differ', () => {
+      expect(handlersManager.stringNotImplies('foo.bar', 'foo.baz')).to.equal(true);
+    });
+  });
   describe('#numberEquals()', () => {
     it('should throw if env value is not a number', () => {
       expect(() => {

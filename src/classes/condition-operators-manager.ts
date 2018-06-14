@@ -1,5 +1,6 @@
 import { IConditionOperatorsManager } from '../interfaces/condition-operators-manager';
 import * as Lodash from 'lodash';
+import { Keys } from '../utils/keys';
 import { InvalidConditionValueError } from './errors/invalid-condition-value';
 import { TConstructible } from '@bluejay/utils';
 import { InvalidEnvironmentValueError } from './errors/invalid-enviroment-value';
@@ -22,6 +23,18 @@ export class ConditionOperatorsManager implements IConditionOperatorsManager {
 
   public stringNotEquals(conditionValue: string, environmentValue: any): boolean {
     return !this.stringEquals(conditionValue, environmentValue);
+  }
+
+  public stringImplies(conditionValue: string, environmentValue: any): boolean {
+    if (!this.isString(environmentValue)) {
+      throw new InvalidEnvironmentValueError(environmentValue);
+    }
+
+    return Keys.implies(conditionValue, environmentValue);
+  }
+
+  public stringNotImplies(conditionValue: string, environmentValue: any): boolean {
+    return !this.stringImplies(conditionValue, environmentValue);
   }
 
   /*********************

@@ -138,6 +138,11 @@ export abstract class Keys {
     return result;
   }
 
+  public static implies(pattern: string, key: string) {
+    const reg = new RegExp('^' + this.escapeForRegExp(pattern) + (pattern.endsWith(WILD_CARD) ? '' : '(\\..+)?$'));
+    return this.isWildCard(pattern) || !!reg.exec(key);
+  }
+
   private static remove(obj: {}, pattern: string) {
     if (!pattern) {
       return obj;
@@ -222,11 +227,6 @@ export abstract class Keys {
     return str
       .replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
       .replace(/\\\*$/, '\.*'); // Trailing wild card accepts anything
-  }
-
-  private static implies(pattern: string, key: string) {
-    const reg = new RegExp('^' + this.escapeForRegExp(pattern) + (pattern.endsWith(WILD_CARD) ? '' : '(\\..+)?$'));
-    return this.isWildCard(pattern) || !!reg.exec(key);
   }
 
   private static toPath(parts: string[], prefix: string = '') {
