@@ -1,4 +1,12 @@
-# AccessControl
+# AccessControl 
+
+
+
+[![npm](https://img.shields.io/npm/v/@bluejay/access-control.svg?style=for-the-badge)](https://www.npmjs.com/package/@bluejay/access-control)
+ [![npm](https://img.shields.io/npm/dm/@bluejay/access-control.svg?style=for-the-badge)](https://www.npmjs.com/package/@bluejay/access-control)
+
+
+
 
 Simple, flexible and reliable [RBAC](https://en.wikipedia.org/wiki/Role-based_access_control) / [ABAC](https://en.wikipedia.org/wiki/Attribute-based_access_control) access control for NodeJS and Typescript.
 
