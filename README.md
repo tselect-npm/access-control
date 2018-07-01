@@ -2,8 +2,10 @@
 
 
 
-[![npm](https://img.shields.io/npm/v/@bluejay/access-control.svg?style=for-the-badge)](https://www.npmjs.com/package/@bluejay/access-control)
- [![npm](https://img.shields.io/npm/dm/@bluejay/access-control.svg?style=for-the-badge)](https://www.npmjs.com/package/@bluejay/access-control)
+[![npm](https://img.shields.io/npm/v/@bluejay/access-control.svg?style=flat-square)](https://www.npmjs.com/package/@bluejay/access-control)
+ [![npm](https://img.shields.io/npm/dm/@bluejay/access-control.svg?style=flat-square)](https://www.npmjs.com/package/@bluejay/access-control)
+[![npm](https://img.shields.io/npm/l/@bluejay/access-control.svg?style=flat-square)](https://www.npmjs.com/package/@bluejay/access-control)
+
 
 
 
