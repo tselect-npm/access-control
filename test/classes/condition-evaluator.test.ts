@@ -1,6 +1,7 @@
+import { expect } from 'chai';
 import { ConditionEvaluator } from '../../';
-import { ConditionEvaluationResultCode } from '../../src/constants/condition-evaluation-result-code';
 import { ConditionEvaluationErrorCode } from '../../src/constants/condition-evaluation-error-code';
+import { ConditionEvaluationResultCode } from '../../src/constants/condition-evaluation-result-code';
 
 class TestableConditionEvaluator extends ConditionEvaluator {
 
@@ -103,7 +104,12 @@ describe('ConditionEvaluator', () => {
       expect(evaluation.succeeded()).to.equal(false);
       expect(evaluation.getResultCode()).to.equal(ConditionEvaluationResultCode.ERROR);
       expect(evaluation.getErrorCode()).to.equal(ConditionEvaluationErrorCode.INVALID_ENVIRONMENT_VALUE);
-      expect(evaluation.getErrorDetails()).to.deep.equal({ attribute: 'foo', operator: 'numberGreaterThan', modifier: 'simpleValueIfExists', value: true });
+      expect(evaluation.getErrorDetails()).to.deep.equal({
+        attribute: 'foo',
+        operator: 'numberGreaterThan',
+        modifier: 'simpleValueIfExists',
+        value: true
+      });
     });
     it('should return a negative evaluation if condition value is invalid', () => {
       const evaluation = conditionEvaluator.evaluate({
@@ -116,7 +122,12 @@ describe('ConditionEvaluator', () => {
       expect(evaluation.succeeded()).to.equal(false);
       expect(evaluation.getResultCode()).to.equal(ConditionEvaluationResultCode.ERROR);
       expect(evaluation.getErrorCode()).to.equal(ConditionEvaluationErrorCode.INVALID_CONDITION_VALUE);
-      expect(evaluation.getErrorDetails()).to.deep.equal({ attribute: 'foo', operator: 'numberGreaterThan', modifier: 'simpleValueIfExists', value: 'true' });
+      expect(evaluation.getErrorDetails()).to.deep.equal({
+        attribute: 'foo',
+        operator: 'numberGreaterThan',
+        modifier: 'simpleValueIfExists',
+        value: 'true'
+      });
     });
     it('should return a positive evaluation using variables', () => {
       const evaluation = conditionEvaluator.evaluate({
@@ -126,6 +137,49 @@ describe('ConditionEvaluator', () => {
           }
         }
       }, { foo: { id: 1 }, bar: { id: 1 } });
+      expect(evaluation.succeeded()).to.equal(true);
+    });
+    it('should ignore object values (simple object - required match)', () => {
+      const evaluation = conditionEvaluator.evaluate({
+        numberEquals: {
+          forAllValues: {
+            'foo': '{{{allowed.id}}}'
+          }
+        }
+      }, { foo: { id: 1 }, allowed: { ids: [1] } });
+      expect(evaluation.succeeded()).to.equal(false);
+    });
+
+    it('should ignore object values (simple object - optional match)', () => {
+      const evaluation = conditionEvaluator.evaluate({
+        numberEquals: {
+          forAllValuesIfExists: {
+            'foo': '{{{allowed.id}}}'
+          }
+        }
+      }, { foo: { id: 1 }, allowed: { ids: [1] } });
+      expect(evaluation.succeeded()).to.equal(true);
+    });
+
+    it('should ignore object values (nested object - required match)', () => {
+      const evaluation = conditionEvaluator.evaluate({
+        numberEquals: {
+          forAllValues: {
+            'foo': '{{{allowed.id}}}'
+          }
+        }
+      }, { foo: [{ id: 1 }], allowed: { ids: [1] } });
+      expect(evaluation.succeeded()).to.equal(false);
+    });
+
+    it('should ignore object values (nested object - optional match)', () => {
+      const evaluation = conditionEvaluator.evaluate({
+        numberEquals: {
+          forAllValuesIfExists: {
+            'foo': '{{{allowed.id}}}'
+          }
+        }
+      }, { foo: [{ id: 1 }], allowed: { ids: [1] } });
       expect(evaluation.succeeded()).to.equal(true);
     });
   });

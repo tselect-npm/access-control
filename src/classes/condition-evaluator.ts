@@ -69,7 +69,15 @@ export class ConditionEvaluator implements IConditionEvaluator {
         const attributePaths = Object.keys(modifierHash);
 
         for (const attributePath of attributePaths) {
-          const environmentValues = Keys.getValues(environment, attributePath);
+          const environmentValues = Keys.getValues(environment, attributePath).map(value => {
+            // The evaluation requires simple values. If `foo.bar` resolves to an object, we then consider that it does
+            // not resolve to a valid value and evaluate it as non-existing.
+            if (Lodash.isPlainObject(value)) {
+              return undefined;
+            }
+            return value;
+          });
+
           const conditionValues = parseConditionValue(modifierHash[attributePath], environment);
 
           let matches: boolean;
