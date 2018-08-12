@@ -620,7 +620,7 @@ type TUser = {
 
 Then we can write a simple class to implement the `IStore` interface.
 
-```
+```typescript
 import { Db } from 'mongodb';
 import { IStore } from './interfaces/store';
 import { ISubject } from './interfaces/subject';
@@ -676,7 +676,7 @@ export class MongoStore implements IStore {
 
 Then to use the store:
 
-```
+```typescript
 import { db } from './db'; // We'll assume that you already have an instance exported.
 
 const store = new MongoStore(db);
@@ -685,7 +685,7 @@ const accessControl = new AccessControl({ store });
 
 That's it! Now each time Bluejay needs to know which permissions are associated with a user, it will fetch the data from your Mongo store.
 
-*Note*: We do not detail advanced methods to manage (create/update) your permissions as this is something you should control. If you're looking for inspiration though, have a look at the [MemoryStore](./src/classes/memory-store.ts).
+**Note**: We do not detail advanced methods to manage (create/update) your permissions as this is something you should control. If you're looking for inspiration though, have a look at the [MemoryStore](./src/classes/memory-store.ts).
 
 ##### MySQL
 
