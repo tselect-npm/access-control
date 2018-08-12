@@ -1,4 +1,4 @@
-# AccessControl 
+# AccessControl
 
 
 
@@ -64,7 +64,7 @@ export class UserSubject extends Subject<{ id: number }> {
 }
 ```
 
-We'll then need to tell Bluejay where to look for permissions. AccessControl comes package with a built-in `MemoryStore` that allows you to manage permissions in memory. We'll cover persistent stores later in this documentation.
+We'll then need to tell Bluejay where to look for permissions. AccessControl comes package with a built-in `MemoryStore` that allows you to manage permissions in memory. We'll cover persistent stores [later in this documentation](#stores).
 
 ```typescript
 import { MemoryStore } from '@bluejay/access-control';
@@ -75,9 +75,9 @@ const store = new MemoryStore();
 Now let's create an instance of Bluejay's AccessControl to be used across the application.
 
 ```typescript
-import { AccessControlManager } from '@bluejay/access-control';
+import { AccessControl } from '@bluejay/access-control';
 
-const accessControl = new AccessControlManager({ store });
+const accessControl = new AccessControl({ store });
 ```
 
 We're now ready to declare permissions:
@@ -237,7 +237,7 @@ const ok = {
 };
 
 const ok2 = {
-  foo: undefined // Thiswill pass because foo does not exist
+  foo: undefined // This will pass because foo does not exist
 }
 
 const nok = {
@@ -536,6 +536,161 @@ app.get('/posts', authenticate(), async (req: Request, res: Response) => {
   }
 });
 ```
+
+### Stores
+
+#### The default `MemoryStore`
+
+By default, Bluejay comes packaged with a `MemoryStore` which allows you to quickly get started by storing permissions in memory.
+
+- `createPermission()`: Create/store a new permission. Overrides any existing permission with the same ID. If no `id` property is set, one will be created
+- `deletePermission()`: Delete a single permission
+- `replacePermission()`: Replaces a permission by ID
+- `addPermissionToRole()`: Assigns a permission to a role. If the permission does not exist yet, it will be created
+- `removePermissionFromRole()`: Unassigns a permission from a role
+- `addRoleToSubject()`: Assigns a role to a subject
+- `removeRoleFromSubject()`: Unassigns a role from a subject
+- `getRolesForSubject()`: Lists roles assigned to a subject
+- `getPermissionsForRole()`: Lists permissions assigned to a role
+- `getPermissionsForSubject()`: Lists permissions assigned to a subject, that is, all permissions attached to the subject's roles
+- `createSubject()`: Creates/stores a subject
+- `deleteSubject()`: Deletes a subject
+- `getPermissions()`: Lists all permissions
+- `getPermissionById()`: Retrieve a permission by ID
+- `getSubjects()`: Lists all subjects
+- `getSubjectByPrincipal()`: Retrieve a subject by principal
+
+
+#### Creating your own store by implementing the `IStore` interface
+
+While the `MemoryStore` is a convenient way to get started, you will maybe feel the need of storing your permissions in a more persistent storage at some point. A `store`, as required by the `AccessControl` constructor, is nothing more than an implementation of the `IStore` interface, which looks like this:
+
+```typescript
+export interface IStore {
+  getPermissionsForSubject(subject: ISubject<{}>): TPermission[] | Promise<TPermission[]>;
+}
+```
+
+This interface defines a single method that will allow Bluejay to retrieve the permissions assigned to a given subject. It can be either synchronous and return a simple array of permissions or asynchronous by returning a promise that resolves with the list.
+
+No matter how permissions are stored, Bluejay expects a permission to look like this:
+
+```typescript
+type TPermission = {
+  id: string | number;              // A unique identifier for this permission
+  effect: 'allow' | 'deny';         // Whether this permission allows or denies access
+  resource: string | string[];      // Either a list or a single resource
+  action: string | string[]];       // Either a list or a single action
+  returnedAttributes?: string[];    // A list of attributes to return
+  condition?: TPermissionCondition; // A condition that defines whether or not the permission is applicable
+}
+```
+
+#### Example store implementations
+
+While Bluejay does not provide other stores than the memory based one out of the box, we're going to take a little time in this documentation and provide some guidance.
+
+##### MongoDB
+
+Because of its native JSON support, it is very simple to store permissions in MongoDB. We could create a collection `permissions` with a schema that directly maps to the `TPermission` type. In addition, and in order to store the association between roles and permissions, we'd add a `roles` property to permissions and end up with a schema that looks like this:
+
+```typescript
+type TMongoPermission = {
+  _id: string;
+  effect: 'allow' | 'deny';
+  resource: string | string[];
+  action: string | string[]];
+  returnedAttributes?: string[];
+  condition?: TPermissionCondition;
+  roles: string[]; // Here we store the roles that get assigned the permission
+}
+```
+
+In our application, we probably already have a `users` collection, which maybe looks like this:
+
+```typescript
+type TUser = {
+  _id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  roles: string[]; // Here we store the user's roles
+}
+```
+
+Then we can write a simple class to implement the `IStore` interface.
+
+```
+import { Db } from 'mongodb';
+import { IStore } from './interfaces/store';
+import { ISubject } from './interfaces/subject';
+import { TPermission } from './types/permission';
+
+// This should be defined somewhere else in your project.
+export interface IApplicationSubject extends ISubject<{ _id: string; }> {
+
+}
+
+// This is your custom permission schema.
+export type TApplicationPermission = TPermission & {
+  _id: string;
+  roles: string[];
+};
+
+/**
+ * Store implementation for Bluejay access control.
+ */
+export class MongoStore implements IStore {
+  private db: Db;
+
+  public constructor(db: Db) {
+    this.db = db;
+  }
+
+  public async getPermissionsForSubject(subject: IApplicationSubject): Promise<TApplicationPermission[]> {
+    const userId = subject.get('_id');
+
+    // First we find the user in order to get their roles.
+    const user = await this.db.collection('users').findOne<{ roles: string[] }>({
+      _id: userId
+    }, {
+      projection: { roles: 1 }
+    });
+
+    if (!user) {
+      throw new Error(`Unknown user: ${userId}.`);
+    }
+
+    // Then we find the permissions that correspond to those roles.
+    const permissionsCursor = await this.db.collection('permissions').find<TApplicationPermission>({
+      role: { in: user.roles }
+    });
+
+    // That's it!
+    return permissionsCursor.toArray();
+  }
+
+}
+
+```
+
+Then to use the store:
+
+```
+import { db } from './db'; // We'll assume that you already have an instance exported.
+
+const store = new MongoStore(db);
+const accessControl = new AccessControl({ store });
+```
+
+That's it! Now each time Bluejay needs to know which permissions are associated with a user, it will fetch the data from your Mongo store.
+
+*Note*: We do not detail advanced methods to manage (create/update) your permissions as this is something you should control. If you're looking for inspiration though, have a look at the [MemoryStore](./src/classes/memory-store.ts).
+
+##### MySQL
+
+TODO
+
 
 ### Returned attributes in depth: pattern matching and the `Keys` utility
 
