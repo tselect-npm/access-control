@@ -20,6 +20,7 @@
   },
   "author": "Sylvain Estevez",
   "license": "MIT",
+  "keywords": ["bluejay", "acl", "abac", "rbac", "access", "security"],
   "devDependencies": {
     "@bluejay/status-code": "^3.0.0",
     "@types/body-parser": "^1.16.8",
