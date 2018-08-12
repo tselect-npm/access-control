@@ -1,6 +1,6 @@
 {
   "name": "@bluejay/access-control",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bluebirds-blue-jay/access-control.git"
@@ -20,7 +20,14 @@
   },
   "author": "Sylvain Estevez",
   "license": "MIT",
-  "keywords": ["bluejay", "acl", "abac", "rbac", "access", "security"],
+  "keywords": [
+    "bluejay",
+    "acl",
+    "abac",
+    "rbac",
+    "access",
+    "security"
+  ],
   "devDependencies": {
     "@bluejay/status-code": "^3.0.0",
     "@types/body-parser": "^1.16.8",
