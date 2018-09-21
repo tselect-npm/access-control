@@ -86,6 +86,13 @@ export class ConditionOperatorsManager implements IConditionOperatorsManager {
   }
 
   /*********************
+   * Null
+   ********************/
+  public null(conditionValue: string, environmentValue: any): boolean {
+    return this.castToBoolean(conditionValue, InvalidConditionValueError) === (environmentValue === null);
+  }
+
+  /*********************
    * Date
    ********************/
   public dateEquals(conditionValue: string, environmentValue: any): boolean {

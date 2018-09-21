@@ -195,6 +195,25 @@ describe('ConditionOperatorsManager', () => {
       expect(handlersManager.bool('false', true)).to.equal(false);
     });
   });
+  describe.only('#null()', () => {
+    it('should throw if condition value is not a boolean', () => {
+      expect(() => {
+        handlersManager.null('trues', true);
+      }).to.throw(InvalidConditionValueError);
+    });
+    it('should return true if values match (true - null)', () => {
+      expect(handlersManager.null('true', null)).to.equal(true);
+    });
+    it('should return false if values differ (true - not null)', () => {
+      expect(handlersManager.null('true', true)).to.equal(false);
+    });
+    it('should return true if values match (false - null)', () => {
+      expect(handlersManager.null('false', true)).to.equal(true);
+    });
+    it('should return false if values differ (false - not null)', () => {
+      expect(handlersManager.null('false', null)).to.equal(false);
+    });
+  });
   describe('#dateEquals()', () => {
     const now = new Date();
     const other = new Date(now.getTime() + 1);

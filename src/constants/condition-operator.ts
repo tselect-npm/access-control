@@ -13,6 +13,8 @@ export enum ConditionOperator {
 
   BOOL = 'bool',
 
+  NULL = 'null',
+
   DATE_EQUALS = 'dateEquals',
   DATE_NOT_EQUALS = 'dateNotEquals',
   DATE_GREATER_THAN = 'dateGreaterThan',
