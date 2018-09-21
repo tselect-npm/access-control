@@ -181,6 +181,393 @@ app.post('/posts', authenticate(), validatePostBody(), async (req: Request, res:
 });
 ```
 
+### Condition operators
+
+Condition operators define how environment values are compared to condition values.
+
+Condition values are defined as strings no matter their type and further casted at runtime. This allows consumers to store permissions in a schema based storage system such a RDMS without worrying about casting values themselves or storing condition values in separate tables because of the type differences.
+
+#### String operators
+
+##### `stringEquals`
+
+```
+const condition = {
+  stringEquals: {
+    simpleValue: {
+      foo: 'bar'
+    }
+  }
+};
+
+
+const ok = {
+  foo: 'bar' // This will pass because foo === 'bar'
+};
+
+const nok = {
+  foo: 'baz' // This won't pass because foo !== 'bar'
+};
+
+const nok2 = {
+  foo: undefined // This won't pass because foo !== 'bar'
+}
+```
+
+##### `stringNotEquals`
+
+```
+const condition = {
+  stringNotEquals: {
+    simpleValue: {
+      foo: 'bar'
+    }
+  }
+};
+
+
+const ok = {
+  foo: 'baz' // This will pass because foo !== 'bar'
+};
+
+const nok = {
+  foo: 'bar' // This won't pass because foo === 'bar'
+};
+
+const nok2 = {
+  foo: undefined // This won't pass because foo is not a string
+}
+```
+
+##### `stringImplies`
+
+```
+const condition = {
+  stringImplies: {
+    simpleValue: {
+      foo: 'bar*'
+    }
+  }
+};
+
+
+const ok = {
+  foo: 'bar' // This will pass because foo matches 'bar'
+};
+
+const ok2 = {
+  foo: 'barack' // This will pass because foo matches 'bar'
+};
+
+const nok = {
+  foo: 'baz' // This won't pass because foo does not match 'bar'
+};
+
+const nok2 = {
+  foo: undefined // This won't pass because foo is not a string
+}
+```
+
+##### `stringNotImplies`
+
+```
+const condition = {
+  stringNotImplies: {
+    simpleValue: {
+      foo: 'bar*'
+    }
+  }
+};
+
+
+const ok = {
+  foo: 'baz' // This will pass because foo does not match 'bar'
+};
+
+const nok = {
+  foo: 'bar' // This won't pass because foo matches 'bar'
+};
+
+const nok2 = {
+  foo: 'barack' // This won't pass because foo matches 'bar'
+};
+
+const nok3 = {
+  foo: undefined // This won't pass because foo is not a string
+}
+```
+
+#### Number operators
+
+##### `numberEquals`
+
+```
+const condition = {
+  numberEquals: {
+    simpleValue: {
+      foo: '1'
+    }
+  }
+};
+
+
+const ok = {
+  foo: 1 // This will pass because foo === 1
+};
+
+const nok = {
+  foo: 2 // This won't pass because foo !== 1
+};
+
+const nok2 = {
+  foo: undefined // This won't pass because foo is not a number
+}
+```
+
+##### `numberNotEquals`
+
+```
+const condition = {
+  numberNotEquals: {
+    simpleValue: {
+      foo: '0'
+    }
+  }
+};
+
+
+const ok = {
+  foo: 1 // This will pass because foo !== 1
+};
+
+const nok = {
+  foo: 0 // This won't pass because foo === 0
+};
+
+const nok2 = {
+  foo: undefined // This won't pass because foo is not a number
+}
+```
+
+##### `numberGreaterThan` / `numberGreaterThanEquals`
+
+```
+const condition = {
+  numberGreaterThan: {
+    simpleValue: {
+      foo: '0'
+    }
+  }
+};
+
+
+const ok = {
+  foo: 1 // This will pass because foo > 1
+};
+
+const nok = {
+  foo: 0 // This won't pass because foo === 0
+};
+
+const nok2 = {
+  foo: undefined // This won't pass because foo is not a number
+}
+```
+
+##### `numberLowerThan` / `numberLowerThanEquals`
+
+```
+const condition = {
+  numberLowerThan: {
+    simpleValue: {
+      foo: '100'
+    }
+  }
+};
+
+
+const ok = {
+  foo: 1 // This will pass because foo < 100
+};
+
+const nok = {
+  foo: 101 // This won't pass because foo > 0
+};
+
+const nok2 = {
+  foo: undefined // This won't pass because foo is not a number
+}
+```
+
+#### `bool`
+
+```
+const condition = {
+  bool: {
+    simpleValue: {
+      foo: 'true'
+    }
+  }
+};
+
+
+const ok = {
+  foo: true // This will pass because foo is true
+};
+
+const nok = {
+  foo: false // This won't pass because foo is not true
+};
+
+const nok2 = {
+  foo: undefined // This won't pass because foo is not a boolean
+}
+```
+
+
+#### `null`
+
+```
+const condition = {
+  null: {
+    simpleValue: {
+      foo: 'true'
+    }
+  }
+};
+
+
+const ok = {
+  foo: null // This will pass because foo is null
+};
+
+const nok = {
+  foo: true // This won't pass because foo is not null
+};
+
+const nok2 = {
+  foo: undefined // This won't pass because foo is not null
+}
+```
+
+#### Date operators
+
+##### `dateEquals`
+
+```
+const condition = {
+  dateEquals: {
+    simpleValue: {
+      foo: '2018-09-21T09:46:12.441Z'
+    }
+  }
+};
+
+
+const ok = {
+  foo: '2018-09-21T09:46:12.441Z' // This will pass because matches the contidion value
+};
+
+const ok2 = {
+  foo: new Date('2018-09-21T09:46:12.441Z') // This will pass because matches the contidion value
+};
+
+const ok2 = {
+  foo: 1537523172441 // This will pass because matches the contidion value
+};
+
+const nok = {
+  foo: '2017-09-21T09:46:12.441Z' // This won't pass because foo does not match the condition value
+};
+
+const nok2 = {
+  foo: undefined // This won't pass because foo is not castable to a date
+}
+```
+
+##### `dateNotEquals`
+
+```
+const condition = {
+  dateNotEquals: {
+    simpleValue: {
+      foo: '2018-09-21T09:46:12.441Z'
+    }
+  }
+};
+
+
+const ok = {
+  foo: '2017-09-21T09:46:12.441Z' // This will pass because is different from the contidion value
+};
+
+const ok2 = {
+  foo: new Date('2017-09-21T09:46:12.441Z') // This will pass because is different from the contidion value
+};
+
+const ok2 = {
+  foo: 1437523172441 // This will pass because is different from the contidion value
+};
+
+const nok = {
+  foo: '2017-09-21T09:46:12.441Z' // This won't pass because foo does matches the condition value
+};
+
+const nok2 = {
+  foo: undefined // This won't pass because foo is not castable to a date
+}
+```
+
+##### `dateGreaterThan` / `dateGreaterThanEquals`
+
+```
+const condition = {
+  dateGreaterThan: {
+    simpleValue: {
+      foo: '2018-09-21T09:46:12.441Z'
+    }
+  }
+};
+
+
+const ok = {
+  foo: '2019-09-21T09:46:12.441Z' // This will pass because foo > condition value
+};
+
+const nok = {
+  foo: '2017-09-21T09:46:12.441Z' // This won't pass because foo < condition value
+};
+
+const nok2 = {
+  foo: undefined // This won't pass because foo is not a date
+}
+```
+
+##### `dateLowerThan` / `dateLowerThanEquals`
+
+```
+const condition = {
+  dateLowerThan: {
+    simpleValue: {
+      foo: '2018-09-21T09:46:12.441Z'
+    }
+  }
+};
+
+
+const ok = {
+  foo: '2017-09-21T09:46:12.441Z' // This will pass because foo < condition value
+};
+
+const nok = {
+  foo: '2019-09-21T09:46:12.441Z' // This won't pass because foo > condition value
+};
+
+const nok2 = {
+  foo: undefined // This won't pass because foo is not a date
+}
+```
+
 ### Condition modifiers
 
 Condition modifiers are largely inspired by AWS IAM policies, with some minor additions (see https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_multi-value-conditions.html and https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_condition_operators.html).
