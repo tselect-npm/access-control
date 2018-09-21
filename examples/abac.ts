@@ -52,6 +52,19 @@ store
     }
   })
   .addPermissionToRole(Role.CUSTOMER, {
+    id: 'CustomerUpdatePostPolicyNullContent',
+    effect: PermissionEffect.ALLOW,
+    resource: 'posts',
+    action: 'update',
+    condition: {
+      null: {
+        simpleValue: {
+          'body.content': 'true'
+        }
+      }
+    }
+  })
+  .addPermissionToRole(Role.CUSTOMER, {
     id: 'CustomerListPostPolicy',
     effect: PermissionEffect.ALLOW,
     resource: 'posts',
@@ -115,6 +128,18 @@ app.get('/posts', authenticate, async (req: ICustomRequest, res: Response) => {
   }
 });
 
+app.patch('/posts/:id', authenticate, async (req: ICustomRequest, res: Response) => {
+  const { body } = req;
+
+  const access = await accessControl.authorize(req.subject, 'posts', 'update', { body });
+
+  if (access.isAllowed()) {
+    res.status(StatusCode.OK).end();
+  } else {
+    res.status(StatusCode.FORBIDDEN).end();
+  }
+});
+
 Promise.resolve().then(async () => {
   await supertest(app)
     .post('/posts')
@@ -150,6 +175,18 @@ Promise.resolve().then(async () => {
     .set('x-me', 'brian')
     .query({ limit: 110 })
     .expect(StatusCode.FORBIDDEN); // limit=110, which is greater than 100: the request is NOT authorized.
+
+  await supertest(app)
+    .patch('/posts/1')
+    .set('x-me', 'brian')
+    .send({ content: null })
+    .expect(StatusCode.OK); // Brian can erase the content.
+
+  await supertest(app)
+    .patch('/posts/1')
+    .set('x-me', 'brian')
+    .send({ content: 'forbidden' }) // Brian cannot modify the content.
+    .expect(StatusCode.FORBIDDEN);
 
   process.exit(0);
 }).catch(err => {
