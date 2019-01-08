@@ -195,7 +195,7 @@ describe('ConditionOperatorsManager', () => {
       expect(handlersManager.bool('false', true)).to.equal(false);
     });
   });
-  describe.only('#null()', () => {
+  describe('#null()', () => {
     it('should throw if condition value is not a boolean', () => {
       expect(() => {
         handlersManager.null('trues', true);
