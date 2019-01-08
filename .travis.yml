@@ -2,7 +2,7 @@ sudo: required
 dist: trusty
 language: node_js
 node_js:
-  - "7.10.0"
+  - "7.10.1"
   - "8.6.0"
 cache:
   directories:
