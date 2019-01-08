@@ -4,4 +4,7 @@ language: node_js
 node_js:
   - "7.10.1"
   - "8.6.0"
-script: npm test
+cache:
+  directories:
+    - node_modules
+script: echo "tsc -v" & npm test
