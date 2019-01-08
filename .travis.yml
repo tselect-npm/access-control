@@ -7,4 +7,4 @@ node_js:
 cache:
   directories:
     - node_modules
-script: echo "tsc -v" & npm test
+script: tsc -v & npm test
