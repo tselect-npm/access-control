@@ -10,8 +10,7 @@
     "suppressImplicitAnyIndexErrors": true,
     "inlineSourceMap": true,
     "lib": ["es2017", "dom"],
-    "types": ["node", "mocha", "chai", "chai-subset"],
-    "skipLibCheck": true
+    "types": ["node", "mocha", "chai", "chai-subset"]
   },
   "exclude": [
     "node_modules",
