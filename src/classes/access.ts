@@ -53,6 +53,10 @@ export class Access implements IAccess {
     return this.decisivePermission ? this.decisivePermission.returnedAttributes : undefined;
   }
 
+  public getCustomData(): Object | undefined {
+    return this.decisivePermission ? this.decisivePermission.customData : undefined;
+  }
+
   public getConsideredPermissions(): TPermission[] {
     return this.consideredPermissions;
   }
