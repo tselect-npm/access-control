@@ -5,6 +5,7 @@ import bodyParser = require('body-parser');
 import { StatusCode } from '@bluejay/status-code';
 import * as supertest from 'supertest';
 import { WILD_CARD } from '../src/constants/wild-card';
+import { expect } from 'chai';
 
 class UserSubject extends Subject<{ name: string }> {
   public getPrincipal() {
@@ -69,6 +70,7 @@ store
     effect: PermissionEffect.ALLOW,
     resource: 'posts',
     action: 'list',
+    customData: { businessRule: 'rule1' },
     condition: {
       numberLowerThanEquals: {
         simpleValueIfExists: {
@@ -122,10 +124,16 @@ app.get('/posts', authenticate, async (req: ICustomRequest, res: Response) => {
   const access = await accessControl.authorize(req.subject, 'posts', 'list', { query });
 
   if (access.isAllowed()) {
-    res.status(StatusCode.OK).end();
+    if(access.getCustomData()) {
+      res.status(StatusCode.OK).json(access.getCustomData());
+    } else {
+      res.status(StatusCode.OK).end();
+    }
   } else {
     res.status(StatusCode.FORBIDDEN).end();
   }
+
+
 });
 
 app.patch('/posts/:id', authenticate, async (req: ICustomRequest, res: Response) => {
@@ -159,10 +167,11 @@ Promise.resolve().then(async () => {
     .send({ title: 'foo', content: 'bar', user_id: 'john' })  // Brian can NOT create a post on behalf of John
     .expect(StatusCode.FORBIDDEN);
 
-  await supertest(app)
+  const response = await supertest(app)
     .get('/posts')
     .set('x-me', 'brian')
     .expect(StatusCode.OK);  // No `limit` provided: the request is authorized.
+  expect(response.body).to.deep.equal({ businessRule: 'rule1' });
 
   await supertest(app)
     .get('/posts')

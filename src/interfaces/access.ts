@@ -14,6 +14,7 @@ export interface IAccess {
   getEnvironment(): TEnvironment | null | undefined;
   getDecisivePermission(): TPermission | null;
   getReturnedAttributes(): TAttributeName[] | TWildCard | undefined;
+  getCustomData(): Object | undefined;
   getDecisionCode(): DecisionCode;
   isEvaluated(): boolean;
   getConsideredPermissions(): TPermission[];
