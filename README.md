@@ -668,7 +668,7 @@ const nok2 = {
 
 ##### `forAllValuesIfExists`
 
-This modifier does exactly the same thing as `forAllValues` expect that it ignores null/undefined values.
+This modifier does exactly the same thing as `forAllValues` expect that it ignores undefined values.
 
 ```
 const condition = {
@@ -730,7 +730,7 @@ const nok2 = {
 
 ##### `forAnyValueIfExists`
 
-You will most likely never use this modifier unless you expect the environment values to be a mix of valid and null/undefined values.
+You will most likely never use this modifier unless you expect the environment values to be a mix of valid and undefined values.
 
 ```
 const condition = {
