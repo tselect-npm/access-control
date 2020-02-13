@@ -19,7 +19,6 @@ import { TAccessFactory } from '../types/access-factory';
 import { DecisionCode } from '../constants/decision-code';
 
 const defaultAccessFactory = (options: TAccessConstructorOptions) => new Access(options);
-const defaultConditionEvaluator = new ConditionEvaluator();
 
 export class AccessAuthorizer implements IAccessAuthorizer {
   private accessFactory: TAccessFactory;
@@ -27,7 +26,7 @@ export class AccessAuthorizer implements IAccessAuthorizer {
 
   public constructor(options: TAuthorizerConstructorOptions = {}) {
     this.accessFactory = options.accessFactory || defaultAccessFactory;
-    this.conditionEvaluator = options.conditionEvaluator || defaultConditionEvaluator;
+    this.conditionEvaluator = options.conditionEvaluator || new ConditionEvaluator(options.conditionEvaluatorOptions);
   }
 
   public authorize(resource: TResource, action: TAction, permissions: TPermission[], environment: TEnvironment = {}): IAccess {
