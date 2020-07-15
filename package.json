@@ -55,7 +55,7 @@
     "@types/stringify-object": "^3.1.1",
     "@types/uuid": "^3.4.3",
     "diff": "4.0.1",
-    "lodash": "4.17.15",
+    "lodash": "4.17.19",
     "moment": "2.24.0",
     "stringify-object": "^3.2.1",
     "typescript": "2.4.2",
