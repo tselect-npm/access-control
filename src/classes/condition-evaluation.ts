@@ -1,8 +1,8 @@
 import { ConditionEvaluationErrorCode } from '../constants/condition-evaluation-error-code';
-import {
-  TConditionEvaluationErrorDetails} from '../types/condition-evaluation-error-details';
 import { ConditionEvaluationResultCode } from '../constants/condition-evaluation-result-code';
 import { IConditionEvaluation } from '../interfaces/condition-evaluation';
+import {
+  TConditionEvaluationErrorDetails} from '../types/condition-evaluation-error-details';
 import {
   TConditionEvaluationInvalidConditionValueErrorDetails,
   TConditionEvaluationInvalidEnvironmentValueErrorDetails,
@@ -80,6 +80,6 @@ export class ConditionEvaluation implements IConditionEvaluation {
       resultCode: this.resultCode,
       errorCode: this.errorCode,
       errorDetails: this.errorDetails
-    }
+    };
   }
 }

@@ -14,4 +14,4 @@ export type TPermission = {
   returnedAttributes?: TAttributeName[] | TWildCard;
   condition?: TPermissionCondition;
   customData?: Object;
-}
+};

@@ -1,6 +1,6 @@
 import { IAccessAuthorizer } from '../interfaces/access-authorizer';
-import { TAuthorizerConstructorOptions } from './authorizer-constructor-options';
 import { IStore } from '../interfaces/store';
+import { TAuthorizerConstructorOptions } from './authorizer-constructor-options';
 
 export type TAccessControlManagerConstructorOptions = {
   store: IStore;

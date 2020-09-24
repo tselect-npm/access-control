@@ -1,4 +1,6 @@
-import { anyImplies } from '../../';
+import { expect } from 'chai';
+
+import { anyImplies } from '../../src';
 
 describe('anyImplies()', () => {
   it('should return true for matching value', () => {

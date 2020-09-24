@@ -1,6 +1,7 @@
+import { ConditionEvaluationErrorCode } from '../constants/condition-evaluation-error-code';
+import { ConditionEvaluationResultCode } from '../constants/condition-evaluation-result-code';
 import {
   TConditionEvaluationErrorDetails} from '../types/condition-evaluation-error-details';
-import { ConditionEvaluationErrorCode } from '../constants/condition-evaluation-error-code';
 import {
   TConditionEvaluationInvalidConditionValueErrorDetails,
   TConditionEvaluationInvalidEnvironmentValueErrorDetails,
@@ -8,7 +9,6 @@ import {
   TConditionEvaluationUnknownOperatorErrorDetails
 } from '../types/condition-evaluation-error-details';
 import { TConditionEvaluationJSON } from '../types/condition-evaluation-json';
-import { ConditionEvaluationResultCode } from '../constants/condition-evaluation-result-code';
 
 export interface IConditionEvaluation {
   succeeded(): boolean;
@@ -16,7 +16,7 @@ export interface IConditionEvaluation {
   errored(): boolean;
   isKnown(): boolean;
   fail(): this;
-  succeed(): this
+  succeed(): this;
   getResultCode(): ConditionEvaluationResultCode;
   getErrorCode(): ConditionEvaluationErrorCode | null;
   getErrorDetails(): TConditionEvaluationErrorDetails | null;

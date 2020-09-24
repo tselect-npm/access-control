@@ -3,17 +3,32 @@
     "module": "commonjs",
     "target": "es6",
     "moduleResolution": "node",
+    "noEmit": true,
+    "strict": true,
     "strictNullChecks": true,
     "alwaysStrict": true,
+    "pretty": true,
+    "declaration": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "suppressImplicitAnyIndexErrors": true,
     "inlineSourceMap": true,
-    "lib": ["es2017", "dom"],
-    "types": ["node", "mocha", "chai", "chai-subset"]
+    "outDir": "dist",
+    "lib": [
+      "es2017"
+    ],
+    "types": [
+      "node",
+      "mocha",
+      "chai"
+    ],
+    "removeComments": true
   },
+  "include": [
+    "src"
+  ],
   "exclude": [
     "node_modules",
-    "dts"
+    "lib"
   ]
 }

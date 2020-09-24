@@ -1,22 +1,22 @@
+import { makeArray } from '@bluejay/utils';
+import { DecisionCode } from '../constants/decision-code';
 import { PermissionEffect } from '../constants/permission-effect';
 import { RESOURCE_PARTS_SEPARATOR } from '../constants/resource-parts-separator';
-import { blanksToWildCards } from '../utils/blanks-to-wild-cards';
-import { implies } from '../utils/implies';
-import { TResource } from '../types/resource';
-import { TAction } from '../types/action';
 import { IAccess } from '../interfaces/access';
 import { IAccessAuthorizer } from '../interfaces/access-authorizer';
-import { Access } from './access';
-import { TEnvironment } from '../types/environment';
-import { TPermission } from '../types/permission';
-import { anyImplies } from '../utils/any-implies';
-import { makeArray } from '@bluejay/utils';
 import { IConditionEvaluator } from '../interfaces/condition-evaluator';
-import { ConditionEvaluator } from './condition-evaluator';
-import { TAuthorizerConstructorOptions } from '../types/authorizer-constructor-options';
 import { TAccessConstructorOptions } from '../types/access-constructor-options';
 import { TAccessFactory } from '../types/access-factory';
-import { DecisionCode } from '../constants/decision-code';
+import { TAction } from '../types/action';
+import { TAuthorizerConstructorOptions } from '../types/authorizer-constructor-options';
+import { TEnvironment } from '../types/environment';
+import { TPermission } from '../types/permission';
+import { TResource } from '../types/resource';
+import { anyImplies } from '../utils/any-implies';
+import { blanksToWildCards } from '../utils/blanks-to-wild-cards';
+import { implies } from '../utils/implies';
+import { Access } from './access';
+import { ConditionEvaluator } from './condition-evaluator';
 
 const defaultAccessFactory = (options: TAccessConstructorOptions) => new Access(options);
 

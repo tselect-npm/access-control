@@ -1,4 +1,6 @@
-import { ConditionModifiersManager } from '../../';
+import { expect } from 'chai';
+
+import { ConditionModifiersManager } from '../../src';
 
 describe('ConditionModifiersManager', () => {
   const handlersManager = new ConditionModifiersManager();

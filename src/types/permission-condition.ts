@@ -3,4 +3,4 @@ import { TPermissionConditionOperatorDescription } from './permission-condition-
 
 export type TPermissionCondition = {
   [operator in ConditionOperator]?: TPermissionConditionOperatorDescription;
-}
+};

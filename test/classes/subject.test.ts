@@ -1,4 +1,6 @@
-import { Subject } from '../../'
+import { expect } from 'chai';
+
+import { Subject } from '../../src'
 
 class TestSubject extends Subject<{ id: number, name: string }> {
   getPrincipal() { return this.get('id'); }

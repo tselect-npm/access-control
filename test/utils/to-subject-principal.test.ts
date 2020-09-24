@@ -1,4 +1,6 @@
-import { toSubjectPrincipal } from '../../';
+import { expect } from 'chai';
+
+import { toSubjectPrincipal } from '../../src';
 import { ISubject } from '../../src/interfaces/subject';
 
 describe('toSubjectPrincipal()', () => {

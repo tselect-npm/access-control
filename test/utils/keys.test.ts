@@ -1,5 +1,6 @@
-import { Key } from 'readline';
-import { Keys } from '../../';
+import { expect } from 'chai';
+
+import { Keys } from '../../src';
 
 describe('AttributesUtil', () => {
   const payload = {

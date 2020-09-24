@@ -1,4 +1,6 @@
-import { blanksToWildCards, WILD_CARD } from '../../';
+import { expect } from 'chai';
+
+import { blanksToWildCards, WILD_CARD } from '../../src';
 
 describe('blanksToWildCards()', () => {
   it('should replace empty slots by wild cards', () => {

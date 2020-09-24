@@ -1,4 +1,6 @@
-import { ConditionOperatorsManager } from '../../';
+import { expect } from 'chai';
+
+import { ConditionOperatorsManager } from '../../src';
 import { InvalidConditionValueError } from '../../src/classes/errors/invalid-condition-value';
 import { InvalidEnvironmentValueError } from '../../src/classes/errors/invalid-enviroment-value';
 

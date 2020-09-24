@@ -1,7 +1,7 @@
-import { TPermission } from './permission';
-import { TEnvironment } from './environment';
-import { TResource } from './resource';
 import { TAction } from './action';
+import { TEnvironment } from './environment';
+import { TPermission } from './permission';
+import { TResource } from './resource';
 
 export type TAccessConstructorOptions = {
   consideredPermissions: TPermission[];
