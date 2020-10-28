@@ -1,4 +1,4 @@
-import { cloneDeep, makeArray } from '@bluejay/utils';
+import { makeArray } from '@bluejay/utils';
 import * as Lodash from 'lodash';
 import { BANG } from '../constants/bang';
 import { PROPERTY_SEPARATOR } from '../constants/property-separator';
@@ -174,7 +174,7 @@ export abstract class Keys {
       return data;
     }
 
-    const result = cloneDeep(data);
+    const result = Lodash.cloneDeep(data);
     const objKeys = this.list(data);
 
     for (const key of objKeys) {
