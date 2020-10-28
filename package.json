@@ -35,8 +35,8 @@
     "security"
   ],
   "dependencies": {
-    "@bluejay/collection": "5.0.0-alpha.12",
-    "@bluejay/utils": "4.0.0-alpha.12",
+    "@bluejay/collection": "5.0.0-beta.1",
+    "@bluejay/utils": "4.0.0-beta.2",
     "diff": "4.0.1",
     "lodash": "4.17.20",
     "moment": "2.24.0",
