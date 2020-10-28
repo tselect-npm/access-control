@@ -1,4 +1,6 @@
-import { AccessAuthorizer, PermissionEffect, TPermission, TResource, TAction, DecisionCode } from '../../';
+import { expect } from 'chai';
+
+import { AccessAuthorizer, PermissionEffect, TPermission, TResource, TAction, DecisionCode } from '../../src';
 
 class TestableAuthorizer extends AccessAuthorizer {
   public filterRelevantPermissions(resource: TResource, action: TAction, permissions: TPermission[]): TPermission[] {

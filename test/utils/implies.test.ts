@@ -1,4 +1,6 @@
-import { implies } from '../../';
+import { expect } from 'chai';
+
+import { implies } from '../../src';
 
 describe('implies()', () => {
   it('should return true for matching values', () => {

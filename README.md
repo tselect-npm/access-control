@@ -1,20 +1,17 @@
 # AccessControl
 
-
-
 [![npm](https://img.shields.io/npm/v/@bluejay/access-control.svg?style=flat-square)](https://www.npmjs.com/package/@bluejay/access-control)
  [![npm](https://img.shields.io/npm/dm/@bluejay/access-control.svg?style=flat-square)](https://www.npmjs.com/package/@bluejay/access-control)
 [![npm](https://img.shields.io/npm/l/@bluejay/access-control.svg?style=flat-square)](https://www.npmjs.com/package/@bluejay/access-control)
 
-
-
-
-
 Simple, flexible and reliable [RBAC](https://en.wikipedia.org/wiki/Role-based_access_control) / [ABAC](https://en.wikipedia.org/wiki/Attribute-based_access_control) access control for NodeJS and Typescript.
 
 ## Requirements
-- `node >= 7`
-- `typescript >= 2.4`
+- `node >= 8.6`, tested with:
+  - `node@8.6.0`
+  - `node@12.8.1`
+- `typescript >= 4.0`, tested with:
+  - `typescript@4.0.2`
 
 ## Installation
 

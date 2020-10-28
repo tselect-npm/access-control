@@ -1,4 +1,6 @@
-import { Subject, AccessControl, MemoryStore, Access } from '../../';
+import { expect } from 'chai';
+
+import { Subject, AccessControl, MemoryStore, Access } from '../../src';
 
 describe('AccessControl', () => {
   class TestSubject extends Subject<{ id: number }> {

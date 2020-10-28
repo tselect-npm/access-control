@@ -1,4 +1,6 @@
-import { Access } from '../../';
+import { expect } from 'chai';
+
+import { Access } from '../../src';
 import { TPermission } from '../../src/types/permission';
 import { PermissionEffect } from '../../src/constants/permission-effect';
 import { DecisionCode } from '../../src/constants/decision-code';

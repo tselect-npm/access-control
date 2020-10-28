@@ -1,5 +1,6 @@
 import { expect } from 'chai';
-import { ConditionEvaluator } from '../../';
+
+import { ConditionEvaluator } from '../../src';
 import { ConditionEvaluationErrorCode } from '../../src/constants/condition-evaluation-error-code';
 import { ConditionEvaluationResultCode } from '../../src/constants/condition-evaluation-result-code';
 

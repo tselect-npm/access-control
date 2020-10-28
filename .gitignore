@@ -1,9 +1,10 @@
-.idea/
-.vscode/
-lib/
 **/*.js
+.idea/
+.nyc_output/
+.vscode/
+coverage/
+dist/
+dts/
+lib/
 node_modules/
 npm-debug.log
-dts/
-.nyc_output/
-coverage/

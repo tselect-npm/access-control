@@ -1,17 +1,17 @@
-import { ISubject } from '../interfaces/subject';
-import { TSubjectPrincipal } from '../types/subject-principal';
-import { TPermissionId } from '../types/permission-id';
-import { TRole } from '../types/role';
-import { TPermission } from '../types/permission';
-import { TCreatePermission } from '../types/create-permission';
+import * as Lodash from 'lodash';
 import * as UUID from 'uuid';
+import { IStore } from '../interfaces/store';
+import { ISubject } from '../interfaces/subject';
+import { TCreatePermission } from '../types/create-permission';
+import { TPermission } from '../types/permission';
+import { TPermissionId } from '../types/permission-id';
+import { TPermissionOrId } from '../types/permission-or-id';
+import { TRole } from '../types/role';
+import { TSubjectOrPrincipal } from '../types/subject-or-principal';
+import { TSubjectPrincipal } from '../types/subject-principal';
+import { toPermissionId } from '../utils/to-permission-id';
 import { toSubjectPrincipal } from '../utils/to-subject-principal';
 import { Subject } from './subject';
-import { TSubjectOrPrincipal } from '../types/subject-or-principal';
-import { TPermissionOrId } from '../types/permission-or-id';
-import { toPermissionId } from '../utils/to-permission-id';
-import * as Lodash from 'lodash';
-import { IStore } from '../interfaces/store';
 
 export class MemoryStore implements IStore {
   private permissions: Map<TPermissionId, TPermission>;

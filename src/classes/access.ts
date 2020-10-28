@@ -1,14 +1,14 @@
-import { IAccess } from '../interfaces/access';
-import { TPermission } from '../types/permission';
-import { TAccessConstructorOptions } from '../types/access-constructor-options';
 import { DecisionCode } from '../constants/decision-code';
-import { TAccessJSON } from '../types/access-json';
-import { TEnvironment } from '../types/environment';
+import { IAccess } from '../interfaces/access';
+import { TAccessConstructorOptions } from '../types/access-constructor-options';
 import { TAccessJournal, TAccessJournalEntry } from '../types/access-journal';
-import { TAttributeName } from '../types/attribute-name';
-import { TWildCard } from '../types/wild-card';
+import { TAccessJSON } from '../types/access-json';
 import { TAction } from '../types/action';
+import { TAttributeName } from '../types/attribute-name';
+import { TEnvironment } from '../types/environment';
+import { TPermission } from '../types/permission';
 import { TResource } from '../types/resource';
+import { TWildCard } from '../types/wild-card';
 
 export class Access implements IAccess {
   private journal: TAccessJournal;
@@ -94,6 +94,19 @@ export class Access implements IAccess {
     return !this.isAllowed();
   }
 
+  public toJSON(): TAccessJSON {
+    return <TAccessJSON>{
+      allowed: this.isAllowed(),
+      action: this.getAction(),
+      resource: this.getResource(),
+      decisionCode: this.getDecisionCode(),
+      decisivePermission: this.getDecisivePermission(),
+      environment: this.getEnvironment(),
+      consideredPermissions: this.getConsideredPermissions(),
+      journal: this.getJournal()
+    };
+  }
+
   public static fromJSON(accessJSON: TAccessJSON): Access {
     const access = new Access(accessJSON);
 
@@ -106,18 +119,5 @@ export class Access implements IAccess {
     access.action = accessJSON.action;
 
     return access;
-  }
-
-  public toJSON(): TAccessJSON {
-    return <TAccessJSON>{
-      allowed: this.isAllowed(),
-      action: this.getAction(),
-      resource: this.getResource(),
-      decisionCode: this.getDecisionCode(),
-      decisivePermission: this.getDecisivePermission(),
-      environment: this.getEnvironment(),
-      consideredPermissions: this.getConsideredPermissions(),
-      journal: this.getJournal()
-    };
   }
 }

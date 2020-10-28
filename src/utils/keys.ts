@@ -1,11 +1,105 @@
-import { makeArray, cloneDeep } from '@bluejay/utils';
+import { cloneDeep, makeArray } from '@bluejay/utils';
 import * as Lodash from 'lodash';
+import { BANG } from '../constants/bang';
 import { PROPERTY_SEPARATOR } from '../constants/property-separator';
 import { UNWIND } from '../constants/unwind';
-import { BANG } from '../constants/bang';
 import { WILD_CARD } from '../constants/wild-card';
 
 export abstract class Keys {
+
+  private static remove(obj: {}, pattern: string) {
+    if (!pattern) {
+      return obj;
+    }
+
+    const parts = pattern.split(PROPERTY_SEPARATOR);
+    const count = parts.length;
+    const leadingPart = parts[0];
+    const nextPart = parts[1];
+    const isNextPartUnwind = this.isUnwind(nextPart);
+    const isLast = isNextPartUnwind ? count === 2 : count === 1;
+
+    if (isLast) {
+      delete obj[leadingPart];
+      return obj;
+    }
+
+    if (isNextPartUnwind) {
+      if (Array.isArray(obj[leadingPart])) {
+        let emptied = 0;
+        obj[leadingPart].forEach((element: any) => {
+          this.remove(element, parts.slice(2).join(PROPERTY_SEPARATOR));
+          if (Lodash.isEmpty(element)) {
+            emptied++;
+          }
+        });
+        if (emptied === obj[leadingPart].length) {
+          delete obj[leadingPart];
+        }
+      } else {
+        delete obj[leadingPart];
+      }
+
+      return obj;
+    }
+
+    if (Lodash.isPlainObject(obj[leadingPart])) {
+      this.remove(obj[leadingPart], parts.slice(1).join(PROPERTY_SEPARATOR));
+      if (Lodash.isEmpty(obj[leadingPart])) {
+        delete obj[leadingPart];
+      }
+      return obj;
+    } else {
+      delete obj[leadingPart];
+    }
+
+    return obj;
+  }
+
+  private static isInvalidPattern(pattern: string) {
+    this.unNegate(pattern);
+
+    if (this.isWildCard(pattern)) {
+      return false;
+    }
+
+    return pattern.startsWith(WILD_CARD) ||
+      pattern.startsWith(UNWIND) ||
+      pattern.startsWith(PROPERTY_SEPARATOR);
+  }
+
+  private static isNegated(pattern: string) {
+    return pattern.charAt(0) === BANG;
+  }
+
+  private static unNegate(pattern: string) {
+    if (this.isNegated(pattern)) {
+      return pattern.slice(1);
+    }
+    return pattern;
+  }
+
+  private static isUnwind(pattern: string) {
+    return pattern === UNWIND;
+  }
+
+  private static isWildCard(pattern: string) {
+    return pattern === WILD_CARD;
+  }
+
+  private static escapeForRegExp(str: string): string {
+    return str
+      .replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+      .replace(/\\\*$/, '\.*'); // Trailing wild card accepts anything
+  }
+
+  private static toPath(parts: string[], prefix = '') {
+    return this.prefix(parts.join(PROPERTY_SEPARATOR), prefix);
+  }
+
+  private static prefix(path: string, prefix: string) {
+    return prefix ? prefix + PROPERTY_SEPARATOR + path : path;
+  }
   public static getValues<T = any>(data: {} | any[], path: string): T[] {
     if (Array.isArray(data)) {
       return Lodash.flattenDeep(data.map(element => this.getValues(element, path)));
@@ -103,7 +197,7 @@ export abstract class Keys {
     return result;
   }
 
-  public static list(obj: {}, prefix: string = ''): string[] {
+  public static list(obj: {}, prefix = ''): string[] {
     const result: string[] = [];
 
     for (const key of Object.getOwnPropertyNames(obj)) {
@@ -141,99 +235,5 @@ export abstract class Keys {
   public static implies(pattern: string, key: string) {
     const reg = new RegExp('^' + this.escapeForRegExp(pattern) + (pattern.endsWith(WILD_CARD) ? '' : '(\\..+)?$'));
     return this.isWildCard(pattern) || !!reg.exec(key);
-  }
-
-  private static remove(obj: {}, pattern: string) {
-    if (!pattern) {
-      return obj;
-    }
-
-    const parts = pattern.split(PROPERTY_SEPARATOR);
-    const count = parts.length;
-    const leadingPart = parts[0];
-    const nextPart = parts[1];
-    const isNextPartUnwind = this.isUnwind(nextPart);
-    const isLast = isNextPartUnwind ? count === 2 : count === 1;
-
-    if (isLast) {
-      delete obj[leadingPart];
-      return obj;
-    }
-
-    if (isNextPartUnwind) {
-      if (Array.isArray(obj[leadingPart])) {
-        let emptied: number = 0;
-        obj[leadingPart].forEach((element: any) => {
-          this.remove(element, parts.slice(2).join(PROPERTY_SEPARATOR));
-          if (Lodash.isEmpty(element)) {
-            emptied++;
-          }
-        });
-        if (emptied === obj[leadingPart].length) {
-          delete obj[leadingPart];
-        }
-      } else {
-        delete obj[leadingPart];
-      }
-
-      return obj;
-    }
-
-    if (Lodash.isPlainObject(obj[leadingPart])) {
-      this.remove(obj[leadingPart], parts.slice(1).join(PROPERTY_SEPARATOR));
-      if (Lodash.isEmpty(obj[leadingPart])) {
-        delete obj[leadingPart];
-      }
-      return obj;
-    } else {
-      delete obj[leadingPart];
-    }
-
-    return obj;
-  }
-
-  private static isInvalidPattern(pattern: string) {
-    this.unNegate(pattern);
-
-    if (this.isWildCard(pattern)) {
-      return false;
-    }
-
-    return pattern.startsWith(WILD_CARD) ||
-      pattern.startsWith(UNWIND) ||
-      pattern.startsWith(PROPERTY_SEPARATOR);
-  }
-
-  private static isNegated(pattern: string) {
-    return pattern.charAt(0) === BANG;
-  }
-
-  private static unNegate(pattern: string) {
-    if (this.isNegated(pattern)) {
-      return pattern.slice(1);
-    }
-    return pattern;
-  }
-
-  private static isUnwind(pattern: string) {
-    return pattern === UNWIND;
-  }
-
-  private static isWildCard(pattern: string) {
-    return pattern === WILD_CARD;
-  }
-
-  private static escapeForRegExp(str: string): string {
-    return str
-      .replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
-      .replace(/\\\*$/, '\.*'); // Trailing wild card accepts anything
-  }
-
-  private static toPath(parts: string[], prefix: string = '') {
-    return this.prefix(parts.join(PROPERTY_SEPARATOR), prefix);
-  }
-
-  private static prefix(path: string, prefix: string) {
-    return prefix ? prefix + PROPERTY_SEPARATOR + path : path;
   }
 }

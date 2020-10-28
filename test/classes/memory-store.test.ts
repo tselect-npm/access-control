@@ -1,4 +1,6 @@
-import { MemoryStore } from '../../';
+import { expect } from 'chai';
+
+import { MemoryStore } from '../../src';
 import { PermissionEffect } from '../../src/constants/permission-effect';
 import { TPermission } from '../../src/types/permission';
 import { Subject } from '../../src/classes/subject';
