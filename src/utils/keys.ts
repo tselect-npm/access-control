@@ -84,8 +84,8 @@ export abstract class Keys {
     return pattern === UNWIND;
   }
 
-  private static isWildCard(pattern: string) {
-    return pattern === WILD_CARD;
+  private static isWildCard(patterns: string | string[]) {
+    return patterns === WILD_CARD || (Array.isArray(patterns) && patterns.length === 1 && patterns[0] === WILD_CARD);
   }
 
   private static escapeForRegExp(str: string): string {
@@ -138,7 +138,7 @@ export abstract class Keys {
   public static filter<T extends {}>(data: T[], matchingPatterns: string | string[], allowMutateData?: boolean): Partial<T>[];
   public static filter<T extends {}>(data: T, matchingPatterns: string | string[], allowMutateData?: boolean): Partial<T>;
   public static filter<T extends ({} | {}[])>(data: T|T[], matchingPatterns: string | string[], allowMutateData= false): Partial<T> | Partial<T>[] {
-    if (matchingPatterns === WILD_CARD || (Array.isArray(matchingPatterns) && matchingPatterns.length === 1 && matchingPatterns[0] === WILD_CARD)) {
+    if (this.isWildCard(matchingPatterns)) {
       return allowMutateData ? data : Lodash.cloneDeep(data);
     }
 
