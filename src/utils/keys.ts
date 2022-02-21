@@ -4,6 +4,7 @@ import { BANG } from '../constants/bang';
 import { PROPERTY_SEPARATOR } from '../constants/property-separator';
 import { UNWIND } from '../constants/unwind';
 import { WILD_CARD } from '../constants/wild-card';
+import { TWildCard } from '../types/wild-card';
 
 export abstract class Keys {
 
@@ -83,8 +84,8 @@ export abstract class Keys {
     return pattern === UNWIND;
   }
 
-  private static isWildCard(pattern: string) {
-    return pattern === WILD_CARD;
+  private static isWildCard(patterns: string | string[]) {
+    return patterns === WILD_CARD || (Array.isArray(patterns) && patterns.length === 1 && patterns[0] === WILD_CARD);
   }
 
   private static escapeForRegExp(str: string): string {
@@ -132,9 +133,15 @@ export abstract class Keys {
     }
   }
 
-  public static filter<T extends {}>(data: T[], matchingPatterns: string | string[]): Partial<T>[];
-  public static filter<T extends {}>(data: T, matchingPatterns: string | string[]): Partial<T>;
-  public static filter<T extends ({} | {}[])>(data: T|T[], matchingPatterns: string | string[]): Partial<T> | Partial<T>[] {
+  public static filter<T extends {}>(data: T, matchingPatterns: TWildCard | [TWildCard], allowMutateData?: boolean): T;
+  public static filter<T extends {}>(data: T[], matchingPatterns: TWildCard | [TWildCard], allowMutateData?: boolean): T[];
+  public static filter<T extends {}>(data: T[], matchingPatterns: string | string[], allowMutateData?: boolean): Partial<T>[];
+  public static filter<T extends {}>(data: T, matchingPatterns: string | string[], allowMutateData?: boolean): Partial<T>;
+  public static filter<T extends ({} | {}[])>(data: T|T[], matchingPatterns: string | string[], allowMutateData= false): Partial<T> | Partial<T>[] {
+    if (this.isWildCard(matchingPatterns)) {
+      return allowMutateData ? data : Lodash.cloneDeep(data);
+    }
+
     if (Array.isArray(data)) {
       return data.map(element => this.filter(element, matchingPatterns)) as T;
     }
@@ -174,7 +181,7 @@ export abstract class Keys {
       return data;
     }
 
-    const result = Lodash.cloneDeep(data);
+    const result = allowMutateData ? data : Lodash.cloneDeep(data);
     const objKeys = this.list(data);
 
     for (const key of objKeys) {
