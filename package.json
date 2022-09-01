@@ -1,7 +1,7 @@
 {
   "name": "@bluejay/access-control",
   "description": "Simple, flexible and reliable access control for NodeJS and Typescript.",
-  "version": "4.0.0-beta.1",
+  "version": "4.0.2",
   "author": "Sylvain Estevez",
   "license": "MIT",
   "main": "dist/index.js",
@@ -15,9 +15,9 @@
   },
   "homepage": "https://github.com/bluebirds-blue-jay/access-control#readme",
   "scripts": {
-    "docs": "./node_modules/.bin/typedoc --out docs --mode file --excludePrivate --excludeExternals ./src/index.ts",
-    "test": "mocha",
-    "cov": "nyc mocha",
+    "docs": "./node_modules/.bin/typedoc --out docs --excludePrivate --excludeExternals ./src/index.ts",
+    "test": "mocha -r ts-node/register -r 'test/setup.ts' --recursive 'test/**/*.test.ts'",
+    "cov": "nyc npm run test",
     "lint": "tslint --project ./",
     "fix": "tslint --fix --project ./",
     "compile": "tsc",
@@ -35,11 +35,11 @@
     "security"
   ],
   "dependencies": {
-    "@bluejay/collection": "5.0.0-beta.2",
-    "@bluejay/utils": "4.0.0-beta.2",
+    "@bluejay/collection": "5.0.0",
+    "@bluejay/utils": "4.0.0",
     "diff": "4.0.1",
-    "lodash": "4.17.20",
-    "moment": "2.24.0",
+    "lodash": "4.17.21",
+    "moment": "2.29.4",
     "stringify-object": "^3.2.1",
     "uuid": "^3.1.0"
   },
@@ -62,12 +62,12 @@
     "chai-subset": "^1.6.0",
     "express": "4.17.1",
     "get-port": "^3.2.0",
-    "mocha": "^5.2.0",
+    "mocha": "^10.0.0",
     "nyc": "15.1.0",
     "supertest": "4.0.2",
     "ts-node": "^9.0.0",
     "tslint": "6.1.3",
-    "typedoc": "0.15.0",
+    "typedoc": "^0.22.15",
     "typescript": "^4.0.2"
   }
 }
