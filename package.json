@@ -1,7 +1,7 @@
 {
   "name": "@tselect/access-control",
   "description": "Simple, flexible and reliable access control for NodeJS and Typescript.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Sylvain Estevez",
   "license": "MIT",
   "main": "dist/index.js",
