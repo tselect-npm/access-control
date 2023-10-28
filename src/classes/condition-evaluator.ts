@@ -88,7 +88,7 @@ export class ConditionEvaluator implements IConditionEvaluator {
               conditionValues,
               environmentValues
             );
-          } catch (err) {
+          } catch (err: any) {
             switch (true) {
               case InvalidEnvironmentValueError.hasInstance(err):
                 return evaluation.error(ConditionEvaluationErrorCode.INVALID_ENVIRONMENT_VALUE, {

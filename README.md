@@ -1,34 +1,27 @@
 # AccessControl
 
-[![npm](https://img.shields.io/npm/v/@bluejay/access-control.svg?style=flat-square)](https://www.npmjs.com/package/@bluejay/access-control)
- [![npm](https://img.shields.io/npm/dm/@bluejay/access-control.svg?style=flat-square)](https://www.npmjs.com/package/@bluejay/access-control)
-[![npm](https://img.shields.io/npm/l/@bluejay/access-control.svg?style=flat-square)](https://www.npmjs.com/package/@bluejay/access-control)
+[![npm](https://img.shields.io/npm/v/@tselect/access-control.svg?style=flat-square)](https://www.npmjs.com/package/@tselect/access-control)
+ [![npm](https://img.shields.io/npm/dm/@tselect/access-control.svg?style=flat-square)](https://www.npmjs.com/package/@tselect/access-control)
+[![npm](https://img.shields.io/npm/l/@tselect/access-control.svg?style=flat-square)](https://www.npmjs.com/package/@tselect/access-control)
 
 Simple, flexible and reliable [RBAC](https://en.wikipedia.org/wiki/Role-based_access_control) / [ABAC](https://en.wikipedia.org/wiki/Attribute-based_access_control) access control for NodeJS and Typescript.
 
-## Requirements
-- `node >= 8.6`, tested with:
-  - `node@8.6.0`
-  - `node@12.8.1`
-- `typescript >= 4.0`, tested with:
-  - `typescript@4.0.2`
-
 ## Installation
 
-`npm i @bluejay/access-control`
+`npm i @tselect/access-control`
 
 ## Guide
 
 ### Simple role based access control
 
-Many applications define a list of roles which are assigned to users and thus define what those users can or cannot do. This is called RBAC (Role Based Access Control) and is one of the most used access control mechanism. Below we'll take a look at how this can be implemented with Bluejay's AccessControl.
+Many applications define a list of roles which are assigned to users and thus define what those users can or cannot do. This is called RBAC (Role Based Access Control) and is one of the most used access control mechanism. Below we'll take a look at how this can be implemented with TSelect's AccessControl.
 
 
 First, let's define some application context:
 
 ```typescript
 // Here we define 2 roles: one for regular customers, and a special admin role for internal users.
-// Note that Bluejay's AccessControl doesn't require any specific role values nor the use of an enum. A role in Bluejay's world is as simple as a string.
+// Note that TSelect's AccessControl doesn't require any specific role values nor the use of an enum. A role in TSelect's world is as simple as a string.
 export enum Role {
   CUSTOMER = 'customer',
   ADMIN = 'admin'
@@ -45,12 +38,12 @@ export interface IPost {
 }
 ```
 
-Next, we'll define a `Subject` class to hold our user's information and communicate with Bluejay's AccessControl. A *subject* is just a fancy security term that defines a security view of an application user. Note that a subject does not have to represent a human being and could for example be a 3rd party system that connects to your application.
+Next, we'll define a `Subject` class to hold our user's information and communicate with TSelect's AccessControl. A *subject* is just a fancy security term that defines a security view of an application user. Note that a subject does not have to represent a human being and could for example be a 3rd party system that connects to your application.
 
-For the sake of simplicity, we'll assume that all users are stored in the same database table and are uniquely identified by an `id` integer. We'll implement the abstract `getPrincipal()` method in order to let Bluejay know what attribute to use as an identifier. A `principal` is another security term that defines an identifying attribute for an application user.
+For the sake of simplicity, we'll assume that all users are stored in the same database table and are uniquely identified by an `id` integer. We'll implement the abstract `getPrincipal()` method in order to let TSelect know what attribute to use as an identifier. A `principal` is another security term that defines an identifying attribute for an application user.
 
 ```typescript
-import { Subject } from '@bluejay/access-control';
+import { Subject } from '@tselect/access-control';
 
 export class UserSubject extends Subject<{ id: number }> {
   public getPrincipal() {
@@ -61,18 +54,18 @@ export class UserSubject extends Subject<{ id: number }> {
 }
 ```
 
-We'll then need to tell Bluejay where to look for permissions. AccessControl comes package with a built-in `MemoryStore` that allows you to manage permissions in memory. We'll cover persistent stores [later in this documentation](#stores).
+We'll then need to tell TSelect where to look for permissions. AccessControl comes package with a built-in `MemoryStore` that allows you to manage permissions in memory. We'll cover persistent stores [later in this documentation](#stores).
 
 ```typescript
-import { MemoryStore } from '@bluejay/access-control';
+import { MemoryStore } from '@tselect/access-control';
 
 const store = new MemoryStore();
 ```
 
-Now let's create an instance of Bluejay's AccessControl to be used across the application.
+Now let's create an instance of TSelect's AccessControl to be used across the application.
 
 ```typescript
-import { AccessControl } from '@bluejay/access-control';
+import { AccessControl } from '@tselect/access-control';
 
 const accessControl = new AccessControl({ store });
 ```
@@ -152,10 +145,10 @@ We are essentially saying that *for all values* in `bodyAttributes`, we expect t
 
 We'll be building a simple express POST endpoint that allows consumers to create blog posts. We'll assume that the request has been authenticated and the current user stored as `req.user`. We'll also assume that the request's body has already been validated and contains only valid values in regards to the data model.
 
-We will be making use of Bluejay's `Keys` utility, which helps performing various attribute related operations on objects and arrays, in a format that is understood by Bluejay.
+We will be making use of TSelect's `Keys` utility, which helps performing various attribute related operations on objects and arrays, in a format that is understood by TSelect.
 
 ```typescript
-import { Keys } from '@bluejay/access-control';
+import { Keys } from '@tselect/access-control';
 
 app.post('/posts', authenticate(), validatePostBody(), async (req: Request, res: Response) => {
   const body: Partial<IPost> = req.body;
@@ -163,7 +156,7 @@ app.post('/posts', authenticate(), validatePostBody(), async (req: Request, res:
   const subject = new UserSubject(req.user);
 
   // We're passing the body's attributes in the environment. Keys.list() will make sure that the resulting list of attributes
-  // is understandable by Bluejay.
+  // is understandable by TSelect.
   const isAllowed = await accessControl.can(subject, 'posts', 'create', { bodyAttributes: Keys.list(body) });
 
   // For an admin user, since no attributes condition has been defined in the permission, any body will be authorized.
@@ -758,7 +751,7 @@ const nok3 = {
 
 ### Condition variables
 
-Bluejay provides us with a powerful way of defining variables as condition values, making permissions dynamic.
+TSelect provides us with a powerful way of defining variables as condition values, making permissions dynamic.
 
 Let's say that we want to expose an endpoint and allows our users to modify their information. We need to make sure that a given user can only modify their own information, and no one else's. A naive way of defining permissions would look like the following.
 
@@ -779,7 +772,7 @@ store
   })
 ```
 
-Thanks to Bluejay's variables, we have a more dynamic way of doing this.
+Thanks to TSelect's variables, we have a more dynamic way of doing this.
 
 ```typescript
 store
@@ -866,7 +859,7 @@ app.get('/posts', authenticate(), async (req: Request, res: Response) => {
 });
 ```
 
-However, in most applications, the consumer is not expected to provide the fields they want to see returned. Bluejay provides you with a convenient way of dealing with this use case by introducing a special `returnedAttributes` property in the permission definition. With this knowledge, we can refactor the previous permission to this one:
+However, in most applications, the consumer is not expected to provide the fields they want to see returned. TSelect provides you with a convenient way of dealing with this use case by introducing a special `returnedAttributes` property in the permission definition. With this knowledge, we can refactor the previous permission to this one:
 
 ```typescript
 ac.addPermissionToRole(Role.CUSTOMER, {
@@ -882,7 +875,7 @@ ac.addPermissionToRole(Role.CUSTOMER, {
 app.get('/posts', authenticate(), async (req: Request, res: Response) => {
   const subject = new UserSubject(req.user);
 
-  // We're not passing any environment data here since the request does not contain any attribute information that could be useful to determine access. the `returnedAttributes` are simply ignored by Bluejay.
+  // We're not passing any environment data here since the request does not contain any attribute information that could be useful to determine access. the `returnedAttributes` are simply ignored by TSelect.
   const access = await accessControl.authorize(subject, 'posts', 'read');
 
   if (access.isAllowed()) {
@@ -895,12 +888,12 @@ app.get('/posts', authenticate(), async (req: Request, res: Response) => {
 });
 ```
 
-It is important to note that Bluejay only acts as a middleman here and never uses `returnedAttributes` to determine access.
+It is important to note that TSelect only acts as a middleman here and never uses `returnedAttributes` to determine access.
 
-Also alternatively, if you are not able to have your services only return a specific set of attributes, you can use Bluejay's `Keys` utility to filter the payload before responding:
+Also alternatively, if you are not able to have your services only return a specific set of attributes, you can use TSelect's `Keys` utility to filter the payload before responding:
 
 ```typescript
-import { Keys } from '@bluejay/access-control';
+import { Keys } from '@tselect/access-control';
 
 app.get('/posts', authenticate(), async (req: Request, res: Response) => {
   const subject = new UserSubject(req.user);
@@ -925,7 +918,7 @@ app.get('/posts', authenticate(), async (req: Request, res: Response) => {
 
 #### The default `MemoryStore`
 
-By default, Bluejay comes packaged with a `MemoryStore` which allows you to quickly get started by storing permissions in memory.
+By default, TSelect comes packaged with a `MemoryStore` which allows you to quickly get started by storing permissions in memory.
 
 - `createPermission()`: Create/store a new permission. Overrides any existing permission with the same ID. If no `id` property is set, one will be created
 - `deletePermission()`: Delete a single permission
@@ -955,9 +948,9 @@ export interface IStore {
 }
 ```
 
-This interface defines a single method that will allow Bluejay to retrieve the permissions assigned to a given subject. It can be either synchronous and return a simple array of permissions or asynchronous by returning a promise that resolves with the list.
+This interface defines a single method that will allow TSelect to retrieve the permissions assigned to a given subject. It can be either synchronous and return a simple array of permissions or asynchronous by returning a promise that resolves with the list.
 
-No matter how permissions are stored, Bluejay expects a permission to look like this:
+No matter how permissions are stored, TSelect expects a permission to look like this:
 
 ```typescript
 type TPermission = {
@@ -972,7 +965,7 @@ type TPermission = {
 
 #### Example store implementations
 
-While Bluejay does not provide other stores than the memory based one out of the box, we're going to take a little time in this documentation and provide some guidance.
+While TSelect does not provide other stores than the memory based one out of the box, we're going to take a little time in this documentation and provide some guidance.
 
 ##### MongoDB
 
@@ -1022,7 +1015,7 @@ export type TApplicationPermission = TPermission & {
 };
 
 /**
- * Store implementation for Bluejay access control.
+ * Store implementation for TSelect access control.
  */
 export class MongoStore implements IStore {
   private db: Db;
@@ -1067,7 +1060,7 @@ const store = new MongoStore(db);
 const accessControl = new AccessControl({ store });
 ```
 
-That's it! Now each time Bluejay needs to know which permissions are associated with a user, it will fetch the data from your Mongo store.
+That's it! Now each time TSelect needs to know which permissions are associated with a user, it will fetch the data from your Mongo store.
 
 **Note**: We do not detail advanced methods to manage (create/update) your permissions as this is something you should control. If you're looking for inspiration though, have a look at the [MemoryStore](./src/classes/memory-store.ts).
 
@@ -1080,7 +1073,7 @@ TODO
 
 The following examples apply to systems where the returned attributes are manually filtered using the `Keys.filter()` utility.
 
-Bluejay uses a proprietary syntax for describing `returnedAttributes` in combination with `Keys`. The reason is that we want to offer a custom-fit experience when dealing with those attributes as well as make sure that we only perform necessary operations in order to obtain the best possible performance.
+TSelect uses a proprietary syntax for describing `returnedAttributes` in combination with `Keys`. The reason is that we want to offer a custom-fit experience when dealing with those attributes as well as make sure that we only perform necessary operations in order to obtain the best possible performance.
 
 The examples below use a data structure that describes a blog post with various attributes.
 
